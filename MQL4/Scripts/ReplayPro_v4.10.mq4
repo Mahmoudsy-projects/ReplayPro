@@ -12,7 +12,7 @@
 #property strict
 #property show_inputs
 
-// v4.10: new on-chart panel in the Risk Manager "Mono Gray" look (header, Trade/Tools tabs, status / info / message boxes).
+// v4.10: new on-chart panel in the Risk Manager "Mono Gray" look (header, status / info / message boxes).
 //        Trading logic is unchanged from v4.00 (same buttons, same execution method).
 // v4.00 (NO DLL): the two DLL imports are gone.
 //  - chart refresh: ChartSetSymbolPeriod() on every open offline window (tested on RPTEST: smooth at 2 bars/s, drawings survive)
@@ -554,84 +554,74 @@ void BuildUI()
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XDISTANCE, PM + PW);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_YDISTANCE, 2);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XSIZE, PW);
-   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 580);
+   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 662);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BGCOLOR, MG_BG);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BORDER_TYPE, BORDER_FLAT);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_COLOR, MG_BORDER);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_SELECTABLE, false);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_HIDDEN, true);
 
-   // ---- always visible: header, tabs, status box, info box, message box
+   // boxes first (z-order)
    Rect("RP_hd", 0, 6, 208, 24, MG_HEAD, MG_HEAD);
+   Rect("RP_stbox", 0, 36, 208, 68, MG_STATUS, MG_BORDER);
+   Rect("RP_ifbox", 0, 512, 208, 84, MG_INFO, MG_BORDER);
+   Rect("RP_mgbox", 0, 602, 208, 50, MG_INFO, MG_BORDER);
    Lbl("RP_ttl", "REPLAY PRO  v4.10", 10, 12, clrWhite);
-   Btn("RP_tab1", "Trade",  0,   36, 102);
-   Btn("RP_tab3", "Tools",  106, 36, 102);
-   Rect("RP_stbox", 0, 66, 208, 68, MG_STATUS, MG_BORDER);
-   Rect("RP_ifbox", 0, 432, 208, 84, MG_INFO, MG_BORDER);
-   Rect("RP_mgbox", 0, 522, 208, 50, MG_INFO, MG_BORDER);
-   for(int i = 1; i <= 4; i++) Lbl("RP_i" + IntegerToString(i), "", 8, 71 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 437 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 528 + (i - 1) * 14, MG_CAP);
+   for(int i = 1; i <= 4; i++) Lbl("RP_i" + IntegerToString(i), "", 8, 41 + (i - 1) * 15, MG_TEXT);
+   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 517 + (i - 1) * 15, MG_TEXT);
+   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 608 + (i - 1) * 14, MG_CAP);
 
-   // ---- tab 1: TRADE (replay control + execution)
-   gTab = 1;
-   Lbl("RP_c1", "REPLAY", 0, 141, MG_CAP);
-   Btn("RP_next", "Next Bar", 0,   156, 102);
-   Btn("RP_play", "Play",     106, 156, 102, 1);
-   Btn("RP_m1",   "+1m",      0,   184, 49);
-   Btn("RP_m5",   "+5m",      53,  184, 49);
-   Btn("RP_m15",  "+15m",     106, 184, 49);
-   Btn("RP_h1",   "+1h",      159, 184, 49);
-   Btn("RP_slow", "Slow",     0,   212, 66);
-   Btn("RP_fast", "Fast",     70,  212, 67);
-   Btn("RP_exit", "Exit",     141, 212, 67, 2);
-   Lbl("RP_c2", "EXECUTION", 0, 242, MG_CAP);
-   Btn("RP_buy",   "BUY",        0,   258, 102, 3, 26);
-   Btn("RP_sell",  "SELL",       106, 258, 102, 3, 26);
-   Btn("RP_cl1",   "Close Last", 0,   288, 102);
-   Btn("RP_clall", "Close All",  106, 288, 102);
-   Lbl("RP_l1", "Risk%", 0,   323, MG_CAP);
-   Edt("RP_risk", DoubleToString(RiskPercent, 2), 42,  319, 56);
-   Lbl("RP_l2", "TP(R)", 110, 323, MG_CAP);
-   Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 319, 56);
+   // replay control
+   Btn("RP_next", "Next Bar", 0,   110, 102);
+   Btn("RP_play", "Play",     106, 110, 102, 1);
+   Btn("RP_m1",   "+1m",      0,   138, 49);
+   Btn("RP_m5",   "+5m",      53,  138, 49);
+   Btn("RP_m15",  "+15m",     106, 138, 49);
+   Btn("RP_h1",   "+1h",      159, 138, 49);
+   Btn("RP_slow", "Slow",     0,   166, 66);
+   Btn("RP_fast", "Fast",     70,  166, 67);
+   Btn("RP_exit", "Exit",     141, 166, 67, 2);
+
+   // execution
+   Btn("RP_buy",   "BUY",        0,   196, 102, 3, 26);
+   Btn("RP_sell",  "SELL",       106, 196, 102, 3, 26);
+   Btn("RP_cl1",   "Close Last", 0,   226, 66);
+   Btn("RP_half",  "Half Close", 70,  226, 67);
+   Btn("RP_clall", "Close All",  141, 226, 67);
+   Lbl("RP_l1", "Risk%", 0,   261, MG_CAP);
+   Edt("RP_risk", DoubleToString(RiskPercent, 2), 42,  257, 56);
+   Lbl("RP_l2", "TP(R)", 110, 261, MG_CAP);
+   Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 257, 56);
    // strategy tag: click to cycle. "Tag" re-tags the selected trade (and the pending line, if any)
-   Btn("RP_strat", "", 0,   346, 208);
-   Btn("RP_setup", "", 0,   372, 158);
-   Btn("RP_tag",   "Tag", 162, 372, 46);
+   Btn("RP_strat", "", 0,   284, 208);
+   Btn("RP_setup", "", 0,   310, 158);
+   Btn("RP_tag",   "Tag", 162, 310, 46);
    UpdateTagButtons();
-   Btn("RP_padd", "ADD PEND LINE", 0,   400, 102);
-   Btn("RP_pcan", "CANCEL PEND",   106, 400, 102);
+   Btn("RP_padd", "ADD PEND LINE", 0,   338, 102);
+   Btn("RP_pcan", "CANCEL PEND",   106, 338, 102);
 
-   // ---- tab 3: TOOLS (levels, jump, selected-trade stops, reports)
-   gTab = 3;
-   Lbl("RP_c7", "LEVELS", 0, 141, MG_CAP);
-   Btn("RP_pd", "Prev Day", 0,   156, 66, 1);
-   Btn("RP_wm", "Week Map", 70,  156, 67, 1);
-   Btn("RP_kt", "Key Time", 141, 156, 67, 1);
-   Lbl("RP_c6", "JUMP TO DATE", 0, 188, MG_CAP);
-   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 204, 112);
-   Btn("RP_cal",  "Cal", 116, 203, 44);
-   Btn("RP_go",   "Go",  164, 203, 44);
-   Lbl("RP_c3", "SELECTED TRADE", 0, 236, MG_CAP);
-   Lbl("RP_l6", "Price", 0, 260, MG_CAP);
-   Edt("RP_px", "", 44, 256, 164);
-   Btn("RP_setsl", "Set SL", 0,   282, 102);
-   Btn("RP_settp", "Set TP", 106, 282, 102);
-   Lbl("RP_l4", "Step$", 0, 316, MG_CAP);
-   Edt("RP_step", DoubleToString(StepDollar, 2), 44, 312, 56);
-   Lbl("RP_l5", "Dist$", 110, 316, MG_CAP);
-   Edt("RP_trl", DoubleToString(TrailDollar, 2), 152, 312, 56);
-   Btn("RP_trail", "Trail", 0, 338, 208);
-   Lbl("RP_c8", "REPORTS", 0, 370, MG_CAP);
-   Btn("RP_dash",  "Dashboard", 0,   386, 66);
-   Btn("RP_save",  "Save",      70,  386, 67);
-   Btn("RP_reset", "Reset",     141, 386, 67, 2);
+   // stops of the selected trade
+   Lbl("RP_l6", "Price", 0, 371, MG_CAP);
+   Edt("RP_px", "", 44, 367, 164);
+   Btn("RP_setsl", "Set SL", 0,   393, 102);
+   Btn("RP_settp", "Set TP", 106, 393, 102);
+
+   // levels, jump to date
+   Btn("RP_pd", "Prev Day", 0,   425, 66, 1);
+   Btn("RP_wm", "Week Map", 70,  425, 67, 1);
+   Btn("RP_kt", "Key Time", 141, 425, 67, 1);
+   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 456, 112);
+   Btn("RP_cal",  "Cal", 116, 455, 44);
+   Btn("RP_go",   "Go",  164, 455, 44);
+
+   // reports
+   Btn("RP_dash",  "Dashboard", 0,   484, 66);
+   Btn("RP_save",  "Save",      70,  484, 67);
+   Btn("RP_reset", "Reset",     141, 484, 67, 2);
 
    // draggable planning SL line (structure stop). DOUBLE-click it, then drag.
    DrawLine("RP_SLLINE", lastBid - InitSLDist, clrYellow, STYLE_SOLID, true, 2);
    ObjectSetInteger(cid, "RP_SLLINE", OBJPROP_SELECTED, true);
-   gTab = 0;
-   SetTab(1);
    ApplyToggles();
 }
 //--------------------------------------------------------------------
@@ -1438,6 +1428,30 @@ void NextSel()
    ApplySel();
    lastMsg = StringFormat("Selected #%d", selId);
 }
+void HalfClose()
+{
+   int i = SelIdx();
+   if(i < 0) { lastMsg = "No open trade."; return; }
+   double half = MathFloor(tLots[i] / 2.0 / LotStep + 0.000000001) * LotStep;
+   if(half < MinLot - 0.0000001 || tLots[i] - half < MinLot - 0.0000001) { lastMsg = "Lot too small to split."; return; }
+   double fill = MarketFill(i);
+   double frac = half / tLots[i];
+   double oLots = tLots[i], oRisk = tRisk[i];
+   tLots[i] = half;
+   tRisk[i] = oRisk * frac;
+   double pl = ((tType[i] == 0) ? (fill - tEntry[i]) : (tEntry[i] - fill)) * half * ContractSize;
+   double r = (tRisk[i] > 0) ? pl / tRisk[i] : 0;
+   closedPL += pl;
+   sumR += r;
+   if(pl >= 0) nWin++; else nLoss++;
+   if(hN < HMAX) { hT[hN] = lastT; hR[hN] = r; hP[hN] = pl; hCat[hN] = tCat[i]; hStp[hN] = tStp[i]; hN++; }
+   LogTrade(i, fill, pl, r);
+   lastMsg = StringFormat("Half closed #%d %.2f lots  %+.2fR  (%.1f$)", tId[i], half, r, pl);
+   tLots[i] = NormalizeDouble(oLots - half, 2);
+   tRisk[i] = oRisk - tRisk[i];
+   SaveState();
+   ApplySel();
+}
 void MoveBE()
 {
    int i = SelIdx();
@@ -2071,8 +2085,6 @@ void OnStart()
       }
       miss = 0;
       if(Pressed("RP_exit")) break;
-      if(Pressed("RP_tab1")) SetTab(1);
-      if(Pressed("RP_tab3")) SetTab(3);
 
       SyncLines();
 
@@ -2105,7 +2117,7 @@ void OnStart()
       if(Pressed("RP_be"))    { MoveBE(); moved = true; }
       if(Pressed("RP_tight")) { MoveSL(+1); moved = true; }
       if(Pressed("RP_loose")) { MoveSL(-1); moved = true; }
-      if(Pressed("RP_trail")) { ToggleTrail(); moved = true; }
+      if(Pressed("RP_half"))  { HalfClose(); moved = true; }
       if(Pressed("RP_setsl")) { SetPrice(false); moved = true; }
       if(Pressed("RP_settp")) { SetPrice(true); moved = true; }
 
