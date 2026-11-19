@@ -425,10 +425,10 @@ void Btn(string n, string txt, int x, int y, int w, int kind = 0, int h = 24)
    ObjectSetInteger(cid, n, OBJPROP_YDISTANCE, y);
    ObjectSetInteger(cid, n, OBJPROP_XSIZE, w);
    ObjectSetInteger(cid, n, OBJPROP_YSIZE, h);
-   ObjectSetInteger(cid, n, OBJPROP_BGCOLOR, MG_FACE);
+   ObjectSetInteger(cid, n, OBJPROP_BGCOLOR, (kind == 3) ? clrWhite : MG_FACE);
    ObjectSetInteger(cid, n, OBJPROP_BORDER_COLOR, MG_DARK);
    ObjectSetInteger(cid, n, OBJPROP_COLOR, (kind == 2) ? MG_DANGER : MG_TEXT);
-   ObjectSetInteger(cid, n, OBJPROP_FONTSIZE, (kind == 3) ? 9 : 8);
+   ObjectSetInteger(cid, n, OBJPROP_FONTSIZE, (kind == 3) ? 12 : 8);
    ObjectSetInteger(cid, n, OBJPROP_STATE, false);
    ObjectSetString(cid, n, OBJPROP_TEXT, txt);
    Reg(n);
@@ -554,7 +554,7 @@ void BuildUI()
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XDISTANCE, PM + PW);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_YDISTANCE, 2);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XSIZE, PW);
-   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 662);
+   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 666);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BGCOLOR, MG_BG);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BORDER_TYPE, BORDER_FLAT);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_COLOR, MG_BORDER);
@@ -564,12 +564,12 @@ void BuildUI()
    // boxes first (z-order)
    Rect("RP_hd", 0, 6, 208, 24, MG_HEAD, MG_HEAD);
    Rect("RP_stbox", 0, 36, 208, 68, MG_STATUS, MG_BORDER);
-   Rect("RP_ifbox", 0, 512, 208, 84, MG_INFO, MG_BORDER);
-   Rect("RP_mgbox", 0, 602, 208, 50, MG_INFO, MG_BORDER);
+   Rect("RP_ifbox", 0, 516, 208, 84, MG_INFO, MG_BORDER);
+   Rect("RP_mgbox", 0, 606, 208, 50, MG_INFO, MG_BORDER);
    Lbl("RP_ttl", "REPLAY PRO  v4.10", 10, 12, clrWhite);
    for(int i = 1; i <= 4; i++) Lbl("RP_i" + IntegerToString(i), "", 8, 41 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 517 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 608 + (i - 1) * 14, MG_CAP);
+   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 521 + (i - 1) * 15, MG_TEXT);
+   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 612 + (i - 1) * 14, MG_CAP);
 
    // replay control
    Btn("RP_next", "Next Bar", 0,   110, 102);
@@ -583,41 +583,34 @@ void BuildUI()
    Btn("RP_exit", "Exit",     141, 166, 67, 2);
 
    // execution
-   Btn("RP_buy",   "BUY",        0,   196, 102, 3, 26);
-   Btn("RP_sell",  "SELL",       106, 196, 102, 3, 26);
-   Btn("RP_cl1",   "Close Last", 0,   226, 66);
-   Btn("RP_half",  "Half Close", 70,  226, 67);
-   Btn("RP_clall", "Close All",  141, 226, 67);
-   Lbl("RP_l1", "Risk%", 0,   261, MG_CAP);
-   Edt("RP_risk", DoubleToString(RiskPercent, 2), 42,  257, 56);
-   Lbl("RP_l2", "TP(R)", 110, 261, MG_CAP);
-   Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 257, 56);
+   Btn("RP_buy",   "BUY",        0,   196, 102, 3, 52);
+   Btn("RP_sell",  "SELL",       106, 196, 102, 3, 52);
+   Btn("RP_cl1",   "Close Last", 0,   254, 66);
+   Btn("RP_half",  "Half Close", 70,  254, 67);
+   Btn("RP_clall", "Close All",  141, 254, 67);
+   Lbl("RP_l1", "Risk%", 0,   289, MG_CAP);
+   Edt("RP_risk", DoubleToString(RiskPercent, 2), 42,  285, 56);
+   Lbl("RP_l2", "TP(R)", 110, 289, MG_CAP);
+   Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 285, 56);
    // strategy tag: click to cycle. "Tag" re-tags the selected trade (and the pending line, if any)
-   Btn("RP_strat", "", 0,   284, 208);
-   Btn("RP_setup", "", 0,   310, 158);
-   Btn("RP_tag",   "Tag", 162, 310, 46);
+   Btn("RP_strat", "", 0,   312, 208);
+   Btn("RP_setup", "", 0,   338, 158);
+   Btn("RP_tag",   "Tag", 162, 338, 46);
    UpdateTagButtons();
-   Btn("RP_padd", "ADD PEND LINE", 0,   338, 102);
-   Btn("RP_pcan", "CANCEL PEND",   106, 338, 102);
+   Btn("RP_padd", "ADD PEND LINE", 0,   366, 102);
+   Btn("RP_pcan", "CANCEL PEND",   106, 366, 102);
 
-   // stops of the selected trade
-   Lbl("RP_l6", "Price", 0, 371, MG_CAP);
-   Edt("RP_px", "", 44, 367, 164);
-   Btn("RP_setsl", "Set SL", 0,   393, 102);
-   Btn("RP_settp", "Set TP", 106, 393, 102);
-
-   // levels, jump to date
-   Btn("RP_pd", "Prev Day", 0,   425, 66, 1);
-   Btn("RP_wm", "Week Map", 70,  425, 67, 1);
-   Btn("RP_kt", "Key Time", 141, 425, 67, 1);
-   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 456, 112);
-   Btn("RP_cal",  "Cal", 116, 455, 44);
-   Btn("RP_go",   "Go",  164, 455, 44);
-
-   // reports
-   Btn("RP_dash",  "Dashboard", 0,   484, 66);
-   Btn("RP_save",  "Save",      70,  484, 67);
-   Btn("RP_reset", "Reset",     141, 484, 67, 2);
+   // tools
+   Lbl("RP_c7", "TOOLS", 0, 406, MG_CAP);
+   Btn("RP_pd", "Prev Day", 0,   422, 66, 1);
+   Btn("RP_wm", "Week Map", 70,  422, 67, 1);
+   Btn("RP_kt", "Key Time", 141, 422, 67, 1);
+   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 452, 112);
+   Btn("RP_cal",  "Cal", 116, 451, 44);
+   Btn("RP_go",   "Go",  164, 451, 44);
+   Btn("RP_dash",  "Dashboard", 0,   480, 66);
+   Btn("RP_save",  "Save",      70,  480, 67);
+   Btn("RP_reset", "Reset",     141, 480, 67, 2);
 
    // draggable planning SL line (structure stop). DOUBLE-click it, then drag.
    DrawLine("RP_SLLINE", lastBid - InitSLDist, clrYellow, STYLE_SOLID, true, 2);
