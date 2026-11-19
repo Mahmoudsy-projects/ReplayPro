@@ -626,7 +626,7 @@ void BuildUI()
    Edt("RP_risk", DoubleToString(RiskPercent, 2), 42,  285, 56);
    Lbl("RP_l2", "TP(R)", 110, 289, MG_CAP);
    Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 285, 56);
-   Btn("RP_sethalf", "Set Half Line", 0, 313, 208);
+   Btn("RP_sethalf", "Set Half Close", 0, 313, 208);
    // strategy tag: click to cycle. "Tag" re-tags the selected trade (and the pending line, if any)
    Btn("RP_strat", "", 0,   340, 208);
    Btn("RP_setup", "", 0,   366, 158);
