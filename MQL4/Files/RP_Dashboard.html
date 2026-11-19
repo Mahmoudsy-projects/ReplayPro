@@ -1,220 +1,344 @@
-<!doctype html>
-<html lang="en">
+<!doctype html><!--RPDASH:411-->
+<html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReplayPro Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReplayPro — داشبورد بکتست</title>
 <style>
 :root{
-  --bg:#f6f7f9; --card:#ffffff; --ink:#1b1f27; --mute:#6b7280; --line:#e3e6eb;
-  --pos:#0f9d6b; --neg:#d6453d; --acc:#3b6fd4; --band:#eef1f6;
+  --bg:#E4E4E4; --surface:#F2F2F2; --card:#FFFFFF; --line:#C9C9C9; --text:#1A1A1A; --muted:#595959;
+  --accent:#0E7C86; --accent-soft:#D3ECEE; --pos:#0E7C86; --neg:#B5432F; --warn:#B7791F; --grid:#E0E0E0; --shadow:0 1px 2px rgba(0,0,0,.08);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#12151b; --card:#1b1f27; --ink:#e7eaf0; --mute:#8b93a1; --line:#2a303b;
-    --pos:#35c28e; --neg:#ef6b63; --acc:#6c9bf0; --band:#222833;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#12151b; --card:#1b1f27; --ink:#e7eaf0; --mute:#8b93a1; --line:#2a303b;
-  --pos:#35c28e; --neg:#ef6b63; --acc:#6c9bf0; --band:#222833;
+:root[data-theme=dark]{
+  --bg:#14171C; --surface:#1C2027; --card:#222730; --line:#363D49; --text:#E8EAED; --muted:#98A1AD;
+  --accent:#3FB8C3; --accent-soft:#1D3B40; --pos:#3FB8C3; --neg:#E0715C; --warn:#E0A63A; --grid:#2C323C; --shadow:none;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
-h1{font-size:20px;margin:0}
-.sub{color:var(--mute);font-size:13px}
-.btn{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer}
-.btn:hover{border-color:var(--acc)}
-.btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.prog{height:6px;background:var(--band);border-radius:4px;overflow:hidden;margin-top:6px;width:240px}
-.prog>i{display:block;height:100%;background:var(--acc)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
-.kpi .l{color:var(--mute);font-size:12px}
-.kpi .v{font-size:22px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
-.pos{color:var(--pos)} .neg{color:var(--neg)}
-.grid{display:grid;grid-template-columns:1fr;gap:16px}
-h2{font-size:14px;margin:0 0 10px;font-weight:650}
-.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-.chip{background:var(--band);border-radius:999px;padding:3px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
-.chip b{cursor:pointer}
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{color:var(--mute);font-weight:550;font-size:12px;cursor:pointer;user-select:none}
-th:first-child,td:first-child{text-align:left}
-tr.cat td{font-weight:600;background:var(--band);cursor:pointer}
-tr.set td:first-child{padding-left:26px;color:var(--ink)}
-tr.set{cursor:pointer}
-tr.set:hover td,tr.cat:hover td{filter:brightness(.97)}
-tr.act td{outline:1px solid var(--acc);outline-offset:-1px}
-.bar{display:inline-block;width:90px;height:8px;position:relative;vertical-align:middle;background:var(--band);border-radius:3px}
-.bar i{position:absolute;top:0;height:100%;border-radius:3px}
-.scroll{overflow-x:auto}
-svg text{fill:var(--mute);font-size:11px}
-.empty{color:var(--mute);padding:24px;text-align:center}
-.two{display:grid;grid-template-columns:1fr;gap:16px}
-@media(min-width:900px){.two{grid-template-columns:1fr 1fr}}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Vazirmatn,"Segoe UI",Tahoma,"Segoe UI",sans-serif;font-size:14px;line-height:1.7}
+.num{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+header h1{font-size:16px;margin:0;font-weight:700}
+header .sp{flex:1}
+.btn{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 12px;font:inherit;cursor:pointer;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)} .btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+select,input[type=date],input[type=text]{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit}
+.filters{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.filters label{color:var(--muted);font-size:12px;display:flex;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--text);padding:4px 10px;font:inherit;cursor:pointer;border-inline-start:1px solid var(--line)}
+.seg button:first-child{border-inline-start:0} .seg button.on{background:var(--accent);color:#fff}
+main{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
+.grid{display:grid;gap:12px}.grid>*{min-width:0}
+svg{direction:ltr}
+.card{overflow-x:auto}
+.kpis{grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi .l{color:var(--muted);font-size:12px}.kpi .v{white-space:nowrap;font-size:20px;font-weight:700;margin-top:2px}.kpi .s{color:var(--muted);font-size:11px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.warn{color:var(--warn)}
+h2{font-size:14px;margin:22px 0 8px;font-weight:700;display:flex;gap:8px;align-items:center}
+h2:before{content:"";width:4px;height:14px;background:var(--accent);border-radius:2px;display:inline-block}
+.card h3{margin:0 0 8px;font-size:13px;font-weight:700}
+.cols2{grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.cols3{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+svg text{font-family:"Segoe UI",Tahoma,sans-serif;fill:var(--muted);font-size:10px}
+.tip{position:fixed;pointer-events:none;background:#111;color:#fff;border-radius:6px;padding:6px 9px;font-size:12px;z-index:50;display:none;direction:rtl;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--grid);text-align:center;white-space:nowrap}
+th{color:var(--muted);font-weight:700;cursor:pointer;position:sticky;top:0;background:var(--card)}
+td:first-child,th:first-child{text-align:start}
+.bar{height:8px;border-radius:4px;background:var(--grid);position:relative;min-width:90px;direction:ltr}
+.bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.empty{text-align:center;padding:60px 20px;border:2px dashed var(--line);border-radius:12px;margin:30px auto;max-width:640px;background:var(--surface)}
+.empty.drag{border-color:var(--accent);background:var(--accent-soft)}
+.muted{color:var(--muted)} .small{font-size:12px}
+.note{background:var(--accent-soft);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text)}
+.scroll{overflow:auto;max-height:520px}
+.pill{display:inline-block;padding:0 7px;border-radius:10px;font-size:11px;background:var(--grid);color:var(--text)}
+.pill.tp{background:var(--accent-soft);color:var(--pos)}.pill.sl{background:#f3d6d0;color:var(--neg)}
+:root[data-theme=dark] .pill.sl{background:#4a2a24}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal div{aspect-ratio:1.5;border-radius:4px;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--grid);color:var(--text)}
+.cal .h{background:transparent;color:var(--muted);aspect-ratio:auto}
+.hid{display:none!important}
+@media print{header,.filters{position:static}.btn{display:none}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<header>
+  <h1>ReplayPro — داشبورد بکتست</h1>
+  <span class="muted small" id="fileInfo"></span>
+  <span class="sp"></span>
+  <button class="btn" id="btnReload" title="خواندن دوباره‌ی RP_data.txt (بعد از زدن Dashboard در ریپلی)">به‌روزرسانی</button>
+  <button class="btn" id="btnTheme">تیره / روشن</button>
+</header>
+<div class="filters hid" id="filters">
+  <label>از <input type="date" id="dFrom"></label>
+  <label>تا <input type="date" id="dTo"></label>
+  <span class="seg" id="presets">
+    <button data-p="today">امروز</button><button data-p="7">۷ روز</button><button data-p="30">۳۰ روز</button><button data-p="month">این ماه</button><button data-p="all" class="on">همه</button>
+  </span>
+  <label>استراتژی <select id="fStrategy"></select></label>
+  <label>ستاپ <select id="fSetup"></select></label>
+  <label>جهت <select id="fDir"></select></label>
+  <span class="seg" id="unitSeg"><button data-u="R" class="on">R</button><button data-u="PCT">%</button><button data-u="USD">$</button></span>
+  <label><input type="checkbox" id="onlyPart"> فقط معاملات چندمرحله‌ای (Half Close)</label>
+</div>
+<main id="main">
+  <div class="empty" id="drop">
+    <h2 style="justify-content:center;margin:0 0 6px">داده‌ای پیدا نشد</h2>
+    <p class="muted">در ReplayPro دکمه‌ی <b>Dashboard</b> را بزن تا <span class="num">RP_data.txt</span> کنار همین فایل نوشته شود، سپس این صفحه را با F5 تازه کن.<br>(هر دو فایل باید در پوشه‌ی <span class="num">MQL4\Files</span> باشند.)</p>
+  </div>
+  <div id="dash" class="hid"></div>
+</main>
+<div class="tip" id="tip"></div>
+
 <script src="RP_data.txt"></script>
 <script>
-(function(){
-const app=document.getElementById('app');
-const D=window.RP_DATA;
-if(!D){app.innerHTML='<div class="card empty">No data found. Press <b>Dashboard</b> in ReplayPro so it writes RP_data.txt next to this file.</div>';return;}
+"use strict";
+/* ============ داده ============ */
+const $ = s => document.querySelector(s);
+const NA = v => v===undefined||v===null||v===""||v==="N/A";
+const nz = v => NA(v)?NaN:parseFloat(v);
+const isTrue = v => String(v).toLowerCase()==="true";
+const pad = n => String(n).padStart(2,"0");
+function parseTime(s){ if(NA(s)) return NaN; const m=/(\d{4})\.(\d\d)\.(\d\d)(?: (\d\d):(\d\d)(?::(\d\d))?)?/.exec(s); if(!m) return NaN; return Date.UTC(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0)); }
+const dayKey = t => { const d=new Date(t); return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate()); };
+const D=window.RP_DATA||{};
+let RAW=[], TR=[], ALL=[], UNIT="R", sortKey="close", sortDir=-1, tableLimit=150;
+const F={from:null,to:null,strategy:"",setup:"",dir:"",onlyPart:false};
 
-const T=D.trades.map((r,i)=>({n:i+1,open:r[0],close:r[1],side:r[2],lots:r[3],entry:r[4],fill:r[5],risk:r[6],pl:r[7],r:r[8],cat:r[9]||'UNTAGGED',set:r[10]||''}));
-let sel={cat:null,set:null}, per='Day', sortK='r', sortDir=-1, tradeLimit=30;
+function buildTrades(D){
+  const sd=D.startBalance||0, sym=D.symbol||"";
+  const out=D.trades.map((r,i)=>{
+    const open=parseTime(r[0]), close=parseTime(r[1]), lots=+r[3], profit=+r[7], R=+r[8], risk=+r[6];
+    const cat=(!r[9]||r[9]==="UNTAGGED")?"بدون تگ":r[9], set=(r[10]||"").trim()||"—";
+    return {id:i+1, ticket:i+1, symbol:sym, dir:r[2]==="BUY"?"Buy":"Sell", open, close, lots, R, pct:sd?profit/sd*100:NaN, hasR:true, profit, riskUSD:risk,
+      strategy:cat, setup:set, parts:+(r[11]||1), entry:+r[4], fill:+r[5],
+      fav:NaN, dur:(close-open)/60000, openHour:new Date(open).getUTCHours(), dow:new Date(open).getUTCDay()};
+  });
+  out.sort((a,b)=>a.close-b.close); return out;
+}
+function outcome(t){ const v=t.hasR?t.R:t.profit; const th=t.hasR?0.05:1; return v>th?"win":v<-th?"loss":"be"; }
 
-const f2=(x,d=2)=>Number(x).toFixed(d);
-const sg=(x,d=2)=>(x>0?'+':'')+Number(x).toFixed(d);
-const cls=x=>x>0?'pos':(x<0?'neg':'');
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ============ فیلتر ============ */
+function applyFilters(){
+  return ALL.filter(t=>{
+    if(F.onlyPart&&t.parts<2) return false;
+    if(F.from!==null&&t.close<F.from) return false;
+    if(F.to!==null&&t.close>=F.to+86400000) return false;
+    if(F.strategy&&t.strategy!==F.strategy) return false;
+    if(F.setup&&t.setup!==F.setup) return false;
+    if(F.dir&&t.dir!==F.dir) return false;
+    return true; });
+}
+const val = t => UNIT==="R"?(t.hasR?t.R:0):UNIT==="PCT"?(t.hasR?t.pct:0):t.profit;
+const uFmt = (x,d=2)=> (UNIT==="R"? x.toFixed(d)+"R" : UNIT==="PCT"? x.toFixed(2)+"%" : (x<0?"-":"")+"$"+Math.abs(x).toFixed(0));
+const UN = () => UNIT==="R"?"R":UNIT==="PCT"?"درصد حساب":"$";
+const cls = x => x>0?"pos":x<0?"neg":"";
+const sgn = (x,d=2)=> (x>0?"+":"")+x.toFixed(d);
 
-function stats(list){
-  const s={n:list.length,w:0,r:0,p:0,gw:0,gl:0,dd:0,best:-1e9,worst:1e9};
-  let cum=0,peak=0;
-  for(const t of list){
-    s.r+=t.r; s.p+=t.pl; cum+=t.r;
-    if(t.r>0){s.w++;s.gw+=t.r}else s.gl+=t.r;
-    if(cum>peak)peak=cum; if(peak-cum>s.dd)s.dd=peak-cum;
-    if(t.r>s.best)s.best=t.r; if(t.r<s.worst)s.worst=t.r;
-  }
-  s.wr=s.n?100*s.w/s.n:0; s.avg=s.n?s.r/s.n:0; s.pf=s.gl<0?s.gw/-s.gl:(s.gw>0?Infinity:0);
-  if(!s.n){s.best=0;s.worst=0}
+/* ============ آمار ============ */
+function stats(ts){
+  const n=ts.length; const rt=ts.filter(t=>t.hasR); const s={n,nR:rt.length};
+  s.netR=rt.reduce((a,t)=>a+t.R,0); s.netUSD=ts.reduce((a,t)=>a+t.profit,0); s.netPct=rt.reduce((a,t)=>a+t.pct,0);
+  const w=ts.filter(t=>outcome(t)==="win"), l=ts.filter(t=>outcome(t)==="loss");
+  s.wins=w.length; s.losses=l.length; s.be=n-w.length-l.length;
+  s.winRate=n?w.length/n:NaN;
+  const gw=w.reduce((a,t)=>a+val(t),0), gl=-l.reduce((a,t)=>a+val(t),0);
+  s.pf=gl>0?gw/gl:(gw>0?Infinity:NaN);
+  s.avgWin=w.length?gw/w.length:NaN; s.avgLoss=l.length?-gl/l.length:NaN;
+  s.exp=n?ts.reduce((a,t)=>a+val(t),0)/n:NaN;
+  // drawdown (بر اساس واحد انتخابی)
+  let eq=0,pk=0,dd=0; ts.forEach(t=>{eq+=val(t); pk=Math.max(pk,eq); dd=Math.min(dd,eq-pk);}); s.maxDD=dd;
+  let cl=0,mcl=0; ts.forEach(t=>{ if(outcome(t)==="loss"){cl++;mcl=Math.max(mcl,cl);} else if(outcome(t)==="win") cl=0; }); s.maxConsLoss=mcl;
+  s.best=ts.length?Math.max(...ts.map(val)):NaN; s.worst=ts.length?Math.min(...ts.map(val)):NaN;
+  s.avgDur=n?ts.reduce((a,t)=>a+t.dur,0)/n:NaN;
+  s.days=new Set(ts.map(t=>dayKey(t.close))).size;
   return s;
 }
-const pfT=s=>s.pf===Infinity?'∞':(s.gl<0?f2(s.pf):'-');
-const filtered=()=>T.filter(t=>(!sel.cat||t.cat===sel.cat)&&(!sel.set||t.set===sel.set));
+const fmtDur = m => isNaN(m)?"—":m<90?Math.round(m)+" دقیقه":(m/60).toFixed(1)+" ساعت";
 
-function kpi(l,v,c){return `<div class="card kpi"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`}
+/* ============ ابزار SVG ============ */
+const tipEl=$("#tip");
+function showTip(e,html){ tipEl.innerHTML=html; tipEl.style.display="block"; const w=tipEl.offsetWidth; let x=e.clientX+14, y=e.clientY+14; if(x+w>innerWidth-8) x=e.clientX-w-14; tipEl.style.left=x+"px"; tipEl.style.top=y+"px"; }
+function hideTip(){ tipEl.style.display="none"; }
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function svgOpen(w,h){ return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block" preserveAspectRatio="xMidYMid meet">`; }
+function niceTicks(min,max,n=5){ if(min===max){max=min+1;} const span=max-min, step0=span/n, mag=Math.pow(10,Math.floor(Math.log10(step0))), r=step0/mag; const step=(r<1.5?1:r<3?2:r<7?5:10)*mag; const a=Math.floor(min/step)*step, b=Math.ceil(max/step)*step; const t=[]; for(let v=a;v<=b+1e-9;v+=step) t.push(+v.toFixed(10)); return t; }
 
-function equity(list){
-  if(!list.length)return '<div class="empty">No closed trades.</div>';
-  const W=820,H=260,L=44,R=12,Tp=12,B=26;
-  let cum=0;const pts=[{i:0,v:0}];
-  list.forEach((t,i)=>{cum+=t.r;pts.push({i:i+1,v:cum,t})});
-  let mn=Math.min(...pts.map(p=>p.v),0),mx=Math.max(...pts.map(p=>p.v),0);
-  if(mx-mn<1){mx+=.5;mn-=.5}
-  const pad=(mx-mn)*.08;mx+=pad;mn-=pad;
-  const X=i=>L+(W-L-R)*(list.length?i/list.length:0), Y=v=>Tp+(H-Tp-B)*(1-(v-mn)/(mx-mn));
-  const step=niceStep((mx-mn)/4);let g='';
-  for(let v=Math.ceil(mn/step)*step;v<=mx;v+=step){
-    g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${f2(v,step<1?1:0)}R</text>`;
-  }
-  const zero=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--mute)" stroke-dasharray="4 3"/>`;
-  const path=pts.map((p,k)=>(k?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
-  const area=path+` L${X(list.length)} ${Y(0)} L${X(0)} ${Y(0)} Z`;
-  const col=cum>=0?'var(--pos)':'var(--neg)';
-  const dots=list.length<=150?pts.slice(1).map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3.2" fill="${p.t.r>0?'var(--pos)':'var(--neg)'}"><title>#${p.t.n} ${esc(p.t.cat)}/${esc(p.t.set)}  ${sg(p.t.r)}R  (cum ${sg(p.v)}R)\n${esc(p.t.close)}</title></circle>`).join(''):'';
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Equity curve in R">${g}${zero}<path d="${area}" fill="${col}" opacity=".08"/><path d="${path}" fill="none" stroke="${col}" stroke-width="2"/>${dots}<text x="${L}" y="${H-6}">${esc(list[0].close.slice(0,10))}</text><text x="${W-R}" y="${H-6}" text-anchor="end">${esc(list[list.length-1].close.slice(0,10))}</text></svg>`;
+function lineChart(id, pts, opt={}){ // pts:[{x:i,y,label}]
+  const W=720,H=opt.h||260,L=44,Rm=12,T=10,B=24; const el=$(id); if(!pts.length){el.innerHTML='<div class="muted small">داده‌ای نیست</div>';return;}
+  const ys=pts.map(p=>p.y); const ticks=niceTicks(Math.min(0,...ys),Math.max(0,...ys)); const y0=ticks[0],y1=ticks[ticks.length-1];
+  const X=i=>L+(pts.length===1?0:i/(pts.length-1))*(W-L-Rm), Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B);
+  let s=svgOpen(W,H);
+  ticks.forEach(v=>{ s+=`<line x1="${L}" x2="${W-Rm}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--grid')}"/><text x="${L-5}" y="${Y(v)+3}" text-anchor="end">${v}</text>`; });
+  s+=`<line x1="${L}" x2="${W-Rm}" y1="${Y(0)}" y2="${Y(0)}" stroke="${css('--muted')}" stroke-dasharray="3 3"/>`;
+  const d=pts.map((p,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(p.y).toFixed(1)).join(" ");
+  const col=opt.color||css('--accent');
+  if(opt.area){ s+=`<path d="${d} L ${X(pts.length-1)} ${Y(0)} L ${X(0)} ${Y(0)} Z" fill="${opt.areaColor||col}" opacity=".18"/>`; }
+  s+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
+  // محور x: برچسب‌های تاریخ
+  const nl=Math.min(6,pts.length); for(let k=0;k<nl;k++){ const i=Math.round(k*(pts.length-1)/Math.max(1,nl-1)); s+=`<text x="${X(i)}" y="${H-6}" text-anchor="middle">${pts[i].xl||""}</text>`; }
+  s+=`<line id="${id.slice(1)}_v" y1="${T}" y2="${H-B}" stroke="${css('--muted')}" opacity="0"/><circle id="${id.slice(1)}_c" r="4" fill="${col}" opacity="0"/>`;
+  s+=`<rect x="${L}" y="${T}" width="${W-L-Rm}" height="${H-T-B}" fill="transparent" class="hov"/></svg>`;
+  el.innerHTML=s; const svg=el.querySelector("svg"), vl=svg.querySelector("#"+id.slice(1)+"_v"), cc=svg.querySelector("#"+id.slice(1)+"_c");
+  svg.querySelector(".hov").addEventListener("mousemove",e=>{ const r=svg.getBoundingClientRect(); const px=(e.clientX-r.left)/r.width*W; let i=Math.round((px-L)/(W-L-Rm)*(pts.length-1)); i=Math.max(0,Math.min(pts.length-1,i)); const p=pts[i];
+    vl.setAttribute("x1",X(i));vl.setAttribute("x2",X(i));vl.setAttribute("opacity",.6); cc.setAttribute("cx",X(i));cc.setAttribute("cy",Y(p.y));cc.setAttribute("opacity",1); showTip(e,p.tip||p.y.toFixed(2)); });
+  svg.querySelector(".hov").addEventListener("mouseleave",()=>{vl.setAttribute("opacity",0);cc.setAttribute("opacity",0);hideTip();});
 }
-function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));const m=x/p;return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p}
-
-function barCell(v,maxAbs){
-  const w=maxAbs?Math.min(50,50*Math.abs(v)/maxAbs):0;
-  const st=v>=0?`left:50%;width:${w}%;background:var(--pos)`:`right:50%;width:${w}%;background:var(--neg)`;
-  return `<span class="bar"><i style="${st}"></i></span>`;
+function barChart(id, items, opt={}){ // items:[{label,v,tip}]
+  const W=720,H=opt.h||220,L=44,Rm=10,T=10,B=26; const el=$(id); if(!items.length){el.innerHTML='<div class="muted small">داده‌ای نیست</div>';return;}
+  const vs=items.map(i=>i.v); const ticks=niceTicks(Math.min(0,...vs),Math.max(0,...vs)); const y0=ticks[0],y1=ticks[ticks.length-1];
+  const Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B), bw=(W-L-Rm)/items.length;
+  let s=svgOpen(W,H); ticks.forEach(v=>{ s+=`<line x1="${L}" x2="${W-Rm}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css('--grid')}"/><text x="${L-5}" y="${Y(v)+3}" text-anchor="end">${v}</text>`; });
+  const every=Math.ceil(items.length/12);
+  items.forEach((it,i)=>{ const x=L+i*bw+bw*.12, w=bw*.76, yv=Y(it.v), y0p=Y(0); const col=it.color||(it.v>=0?css('--pos'):css('--neg'));
+    s+=`<rect class="b" data-i="${i}" x="${x}" y="${Math.min(yv,y0p)}" width="${w}" height="${Math.max(1,Math.abs(yv-y0p))}" fill="${col}" rx="2"/>`;
+    if(i%every===0) s+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle">${it.label}</text>`; });
+  s+="</svg>"; el.innerHTML=s;
+  el.querySelectorAll(".b").forEach(r=>{ const it=items[+r.dataset.i]; r.addEventListener("mousemove",e=>showTip(e,it.tip||it.v)); r.addEventListener("mouseleave",hideTip); });
 }
-
-function strategyTable(){
-  const cats=new Map();
-  for(const t of T){
-    if(!cats.has(t.cat))cats.set(t.cat,{all:[],sets:new Map()});
-    const c=cats.get(t.cat);c.all.push(t);
-    if(!c.sets.has(t.set))c.sets.set(t.set,[]);c.sets.get(t.set).push(t);
-  }
-  const rows=[];
-  for(const [cn,c] of cats){
-    const s=stats(c.all);rows.push({k:'cat',cat:cn,set:'',s,sub:[...c.sets].map(([sn,l])=>({k:'set',cat:cn,set:sn,s:stats(l)}))});
-  }
-  const val=o=>({r:o.s.r,n:o.s.n,wr:o.s.wr,avg:o.s.avg,pf:o.s.pf===Infinity?1e9:o.s.pf,name:o.set||o.cat}[sortK]);
-  const cmp=(a,b)=>{const x=val(a),y=val(b);return sortK==='name'?sortDir*-String(x).localeCompare(String(y)):sortDir*(x-y)};
-  rows.sort(cmp);rows.forEach(r=>r.sub.sort(cmp));
-  let maxAbs=0;rows.forEach(r=>{maxAbs=Math.max(maxAbs,Math.abs(r.s.r));r.sub.forEach(x=>maxAbs=Math.max(maxAbs,Math.abs(x.s.r)))});
-  const th=(k,l)=>`<th data-k="${k}">${l}${sortK===k?(sortDir<0?' ↓':' ↑'):''}</th>`;
-  let h=`<div class="scroll"><table><thead><tr>${th('name','Strategy / Setup')}${th('n','Trades')}${th('wr','Win %')}${th('r','Total R')}<th></th>${th('avg','Avg R')}${th('pf','PF')}</tr></thead><tbody>`;
-  const line=(o)=>{
-    const a=(sel.cat===o.cat&&sel.set===(o.set||null))?' act':'';
-    return `<tr class="${o.k}${a}" data-cat="${esc(o.cat)}" data-set="${esc(o.set)}"><td>${esc(o.k==='cat'?o.cat:(o.set||'(no setup)'))}</td><td>${o.s.n}</td><td>${f2(o.s.wr,0)}%</td><td class="${cls(o.s.r)}">${sg(o.s.r)}</td><td>${barCell(o.s.r,maxAbs)}</td><td class="${cls(o.s.avg)}">${sg(o.s.avg)}</td><td>${pfT(o.s)}</td></tr>`;
-  };
-  for(const r of rows){h+=line(r);r.sub.forEach(x=>h+=line(x))}
-  return h+'</tbody></table></div>';
+/* ============ بخش‌ها ============ */
+function groupBy(ts,keyFn){ const m=new Map(); ts.forEach(t=>{ const k=keyFn(t); if(k===null||k===undefined) return; if(!m.has(k)) m.set(k,[]); m.get(k).push(t); }); return m; }
+function breakdownCard(title, ts, keyFn, opt={}){
+  const g=groupBy(ts,keyFn); let rows=[...g.entries()].map(([k,a])=>({k,a,s:stats(a),sum:a.reduce((x,t)=>x+val(t),0)}));
+  if(opt.order) rows.sort((x,y)=>opt.order(x.k)-opt.order(y.k)); else rows.sort((x,y)=>y.a.length-x.a.length);
+  if(!rows.length) return `<div class="card"><h3>${title}</h3><div class="muted small">داده‌ای نیست</div></div>`;
+  const mx=Math.max(...rows.map(r=>Math.abs(r.sum)),1e-9);
+  return `<div class="card"><h3>${title}</h3><table><tr><th></th><th>تعداد</th><th>Win%</th><th>مجموع</th><th></th><th>امید ریاضی</th></tr>`+
+   rows.map(r=>{ const w=Math.abs(r.sum)/mx*50; const bar=`<div class="bar"><i style="${r.sum>=0?`left:50%;`:`right:50%;`}width:${w}%;background:${r.sum>=0?css('--pos'):css('--neg')}"></i></div>`;
+     return `<tr><td>${r.k}</td><td class="num">${r.a.length}</td><td class="num">${isNaN(r.s.winRate)?"—":(r.s.winRate*100).toFixed(0)+"%"}</td><td class="num ${cls(r.sum)}">${uFmt(r.sum)}</td><td>${bar}</td><td class="num ${cls(r.s.exp)}">${isNaN(r.s.exp)?"—":uFmt(r.s.exp)}</td></tr>`; }).join("")+`</table></div>`;
 }
-
-function periodTable(list){
-  const m=new Map();
-  for(const t of list){
-    const d=t.close.slice(0,10);let key=d;
-    if(per==='Week'){
-      const [y,mo,da]=d.split('.').map(Number);const dt=new Date(Date.UTC(y,mo-1,da));
-      const wd=(dt.getUTCDay()+6)%7;dt.setUTCDate(dt.getUTCDate()-wd);key=dt.toISOString().slice(0,10).replace(/-/g,'.');
-    }
-    if(!m.has(key))m.set(key,[]);m.get(key).push(t);
-  }
-  const rows=[...m].sort((a,b)=>a[0]<b[0]?1:-1).map(([k,l])=>({k,s:stats(l)}));
-  if(!rows.length)return '<div class="empty">No data.</div>';
-  const maxAbs=Math.max(...rows.map(r=>Math.abs(r.s.r)));
-  return `<div class="scroll"><table><thead><tr><th>${per==='Week'?'Week (Mon)':'Day'}</th><th>Trades</th><th>Win %</th><th>R</th><th></th><th>$</th></tr></thead><tbody>`+
-    rows.slice(0,40).map(r=>`<tr><td>${r.k}</td><td>${r.s.n}</td><td>${f2(r.s.wr,0)}%</td><td class="${cls(r.s.r)}">${sg(r.s.r)}</td><td>${barCell(r.s.r,maxAbs)}</td><td class="${cls(r.s.p)}">${sg(r.s.p,1)}</td></tr>`).join('')+'</tbody></table></div>';
+function partialCard(ts){
+  const rows=[["بسته‌شده در یک مرحله",t=>t.parts<2],["چندمرحله‌ای (Half Close / Set Half Close)",t=>t.parts>=2]];
+  let h=`<div class="card"><h3>خروج یک‌مرحله‌ای در برابر چندمرحله‌ای</h3><table><tr><th>نوع</th><th>تعداد</th><th>Win%</th><th>مجموع</th><th>امید ریاضی</th></tr>`;
+  rows.forEach(([n,f])=>{ const a=ts.filter(f), sa=stats(a), sum=a.reduce((x,t)=>x+val(t),0);
+    h+=`<tr><td>${n}</td><td class="num">${a.length}</td><td class="num">${isNaN(sa.winRate)?"—":(sa.winRate*100).toFixed(0)+"%"}</td><td class="num ${cls(sum)}">${a.length?uFmt(sum):"—"}</td><td class="num ${cls(sa.exp)}">${isNaN(sa.exp)?"—":uFmt(sa.exp)}</td></tr>`; });
+  return h+`</table><div class="muted small" style="margin-top:6px">هر معامله‌ی چندمرحله‌ای یک ترید حساب می‌شود؛ R آن مجموع همه‌ی مرحله‌ها نسبت به ریسک کامل ورود است.</div></div>`;
 }
-
-function tradeTable(list){
-  if(!list.length)return '<div class="empty">No trades.</div>';
-  const rows=[...list].reverse().slice(0,tradeLimit);
-  let h=`<div class="scroll"><table><thead><tr><th>#</th><th>Closed</th><th>Side</th><th>Strategy</th><th>Setup</th><th>Lots</th><th>R</th><th>$</th></tr></thead><tbody>`;
-  for(const t of rows)h+=`<tr><td>${t.n}</td><td>${esc(t.close)}</td><td>${esc(t.side)}</td><td style="text-align:left">${esc(t.cat)}</td><td style="text-align:left">${esc(t.set)}</td><td>${f2(t.lots)}</td><td class="${cls(t.r)}">${sg(t.r)}</td><td class="${cls(t.pl)}">${sg(t.pl,1)}</td></tr>`;
-  h+='</tbody></table></div>';
-  if(list.length>tradeLimit)h+=`<div style="margin-top:10px"><button class="btn" id="more">Show more</button></div>`;
-  return h;
+const DOW=["یکشنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنجشنبه","جمعه","شنبه"];
+function heatmap(ts){
+  const cell=new Map(); ts.forEach(t=>{ const k=t.dow+"-"+t.openHour; if(!cell.has(k)) cell.set(k,{n:0,s:0}); const c=cell.get(k); c.n++; c.s+=val(t); });
+  const mx=Math.max(1e-9,...[...cell.values()].map(c=>Math.abs(c.s/c.n)));
+  const days=[6,0,1,2,3,4,5]; const cw=26,ch=22,L=64,T=18,W=L+24*cw+6,H=T+7*ch+6;
+  let s=svgOpen(W,H); for(let h=0;h<24;h+=2) s+=`<text x="${L+h*cw+cw/2}" y="12" text-anchor="middle">${pad(h)}</text>`;
+  days.forEach((d,r)=>{ s+=`<text x="${L-6}" y="${T+r*ch+ch/2+3}" text-anchor="end">${DOW[d]}</text>`;
+    for(let h=0;h<24;h++){ const c=cell.get(d+"-"+h); let fill=css('--grid'),op=1; if(c){ const a=c.s/c.n; fill=a>=0?css('--pos'):css('--neg'); op=.2+.8*Math.min(1,Math.abs(a)/mx); }
+      s+=`<rect class="hc" data-k="${d}-${h}" x="${L+h*cw}" y="${T+r*ch}" width="${cw-2}" height="${ch-2}" rx="3" fill="${fill}" opacity="${op}"/>`; } });
+  s+="</svg>"; $("#heat").innerHTML=s; $("#heat").querySelectorAll(".hc").forEach(r=>{ const c=cell.get(r.dataset.k); r.addEventListener("mousemove",e=>{ if(!c) return hideTip(); const [d,h]=r.dataset.k.split("-"); showTip(e,`${DOW[d]} ساعت ${pad(h)}:00 سرور<br>${c.n} ترید · مجموع ${uFmt(c.s)} · میانگین ${uFmt(c.s/c.n)}`); }); r.addEventListener("mouseleave",hideTip); });
 }
+function calendar(ts){
+  const m=new Map(); ts.forEach(t=>{ const k=dayKey(t.close); m.set(k,(m.get(k)||0)+val(t)); });
+  if(!m.size){ $("#cal").innerHTML='<div class="muted small">داده‌ای نیست</div>'; return; }
+  const keys=[...m.keys()].sort(); const mx=Math.max(...[...m.values()].map(Math.abs),1e-9);
+  const months=[...new Set(keys.map(k=>k.slice(0,7)))]; const mn=["ژانویه","فوریه","مارس","آوریل","مه","ژوئن","ژوئیه","اوت","سپتامبر","اکتبر","نوامبر","دسامبر"];
+  let h="";
+  months.forEach(ym=>{ const [y,mo]=ym.split("-").map(Number); const first=new Date(Date.UTC(y,mo-1,1)); const dim=new Date(Date.UTC(y,mo,0)).getUTCDate(); const off=(first.getUTCDay()+1)%7; // شنبه=0
+    const tot=keys.filter(k=>k.startsWith(ym)).reduce((a,k)=>a+m.get(k),0);
+    h+=`<div class="card"><h3>${mn[mo-1]} ${y} <span class="num ${cls(tot)}" style="font-weight:400">${uFmt(tot)}</span></h3><div class="cal">`+["ش","ی","د","س","چ","پ","ج"].map(x=>`<div class="h">${x}</div>`).join("");
+    for(let i=0;i<off;i++) h+=`<div class="h"></div>`;
+    for(let d=1;d<=dim;d++){ const k=ym+"-"+pad(d), v=m.get(k); if(v===undefined){ h+=`<div style="opacity:.45">${d}</div>`; continue; }
+      const a=.25+.75*Math.min(1,Math.abs(v)/mx); h+=`<div title="${k}: ${uFmt(v)}" style="background:${v>=0?css('--pos'):css('--neg')};color:#fff;opacity:${a+.1}">${d}<b class="num">${UNIT==="USD"?v.toFixed(0):v.toFixed(1)}</b></div>`; }
+    h+=`</div></div>`; });
+  $("#cal").innerHTML=h;
+}
+function tradeTable(ts){
+  const cols=[["close","بسته شدن",t=>fmtDT(t.close)],["dir","جهت",t=>t.dir==="Buy"?"خرید":"فروش"],["strategy","استراتژی",t=>t.strategy],["setup","ستاپ",t=>t.setup],
+    ["lots","لات",t=>`<span class="num">${t.lots.toFixed(2)}</span>`],["entry","ورود",t=>`<span class="num">${t.entry}</span>`],["fill","خروج",t=>`<span class="num">${t.fill}</span>`],["R","R",t=>t.hasR?`<span class="num ${cls(t.R)}">${sgn(t.R)}</span>`:"—"],["pct","%",t=>t.hasR&&!isNaN(t.pct)?`<span class="num ${cls(t.pct)}">${sgn(t.pct)}%</span>`:"—"],["profit","سود $",t=>`<span class="num ${cls(t.profit)}">${t.profit.toFixed(0)}</span>`],
+    ["dur","مدت",t=>fmtDur(t.dur)],["parts","مرحله",t=>t.parts>1?`<span class="pill tp">${t.parts}</span>`:""]];
+  const sorted=[...ts].sort((a,b)=>{ const x=a[sortKey],y=b[sortKey]; const c=(typeof x==="string")?x.localeCompare(y):((isNaN(x)?-1e9:x)-(isNaN(y)?-1e9:y)); return c*sortDir; });
+  const shown=sorted.slice(0,tableLimit);
+  $("#tbl").innerHTML=`<table><tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]}${sortKey===c[0]?(sortDir>0?" ▲":" ▼"):""}</th>`).join("")}</tr>`+shown.map(t=>`<tr>${cols.map(c=>`<td>${c[2](t)}</td>`).join("")}</tr>`).join("")+`</table>`+
+    (sorted.length>shown.length?`<div style="text-align:center;margin:8px"><button class="btn" id="more">نمایش بیشتر (${sorted.length-shown.length})</button></div>`:"");
+  $("#tbl").querySelectorAll("th").forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else {sortKey=k;sortDir=-1;} tradeTable(ts); });
+  const mb=$("#more"); if(mb) mb.onclick=()=>{tableLimit+=200;tradeTable(ts);};
+}
+const fmtDT = t => { const d=new Date(t); return d.getUTCFullYear()+"."+pad(d.getUTCMonth()+1)+"."+pad(d.getUTCDate())+" "+pad(d.getUTCHours())+":"+pad(d.getUTCMinutes()); };
 
+/* ============ رندر اصلی ============ */
+function kpi(l,v,s="",c=""){ return `<div class="card kpi"><div class="l">${l}</div><div class="v num ${c}">${v}</div><div class="s">${s}</div></div>`; }
 function render(){
-  const all=stats(T),list=filtered(),s=stats(list);
-  const pct=D.target>0?Math.min(100,100*T.length/D.target):0;
-  const filt=(sel.cat?`<span class="chip">${esc(sel.cat)}${sel.set?' / '+esc(sel.set):''} <b id="clr" title="Clear filter">✕</b></span>`:'<span class="sub">Click a strategy or setup to filter the charts and trades.</span>');
-  app.innerHTML=`
-  <header>
-    <div><h1>ReplayPro · ${esc(D.batch)}</h1>
-      <div class="sub">Replay time ${esc(D.replayTime)} · open trades ${D.open} · floating ${sg(D.floating,1)}$ · balance ${f2(D.startBalance+all.p,0)}$</div>
-      <div class="sub" style="margin-top:4px">${T.length} / ${D.target} trades</div><div class="prog"><i style="width:${pct}%"></i></div></div>
-    <div><button class="btn" id="reload">Reload</button> <button class="btn" id="theme">Theme</button></div>
-  </header>
-  <div class="filters">${filt}</div>
-  <div class="kpis">
-    ${kpi('Trades',s.n)}${kpi('Win rate',f2(s.wr,0)+'%')}${kpi('Total R',sg(s.r),cls(s.r))}${kpi('Net $',sg(s.p,0),cls(s.p))}
-    ${kpi('Profit factor',pfT(s))}${kpi('Avg R',sg(s.avg),cls(s.avg))}${kpi('Max drawdown',f2(s.dd)+'R')}${kpi('Best / Worst',sg(s.best)+' / '+sg(s.worst))}
+  const ts=applyFilters(); const s=stats(ts); const d=$("#dash");
+  if(!ts.length){ d.innerHTML=`<div class="empty">برای این فیلترها معامله‌ای نیست.</div>`; return; }
+  const pf = s.pf===Infinity?"∞":isNaN(s.pf)?"—":s.pf.toFixed(2);
+  d.innerHTML=`
+  <div class="grid kpis">
+    ${kpi("بچ «"+(D.batch||"")+"»",s.n+" / "+(D.target||"—"),"معامله از هدف بچ · زمان ریپلی "+(D.replayTime||"")+" · باز: "+(D.open||0))}
+    ${kpi("تعداد معاملات",s.n,`${s.wins} برد · ${s.losses} باخت · ${s.be} سر‌به‌سر`)}
+    ${kpi("مجموع ("+UN()+")", uFmt(UNIT==="R"?s.netR:UNIT==="PCT"?s.netPct:s.netUSD), `${s.netR.toFixed(1)}R · ${s.netPct.toFixed(2)}% · $${s.netUSD.toFixed(0)}`, cls(UNIT==="R"?s.netR:UNIT==="PCT"?s.netPct:s.netUSD))}
+    ${kpi("نرخ برد",isNaN(s.winRate)?"—":(s.winRate*100).toFixed(1)+"%")}
+    ${kpi("ضریب سود (PF)",pf,"",s.pf>=1?"pos":"neg")}
+    ${kpi("امید ریاضی",isNaN(s.exp)?"—":uFmt(s.exp),"به‌ازای هر معامله",cls(s.exp))}
+    ${kpi("میانگین برد / باخت",(isNaN(s.avgWin)?"—":uFmt(s.avgWin))+" / "+(isNaN(s.avgLoss)?"—":uFmt(s.avgLoss)),isNaN(s.avgWin/s.avgLoss)?"":"نسبت "+(s.avgWin/s.avgLoss).toFixed(2))}
+    ${kpi("حداکثر افت (DD)",uFmt(s.maxDD),"از اوج سرمایه‌ی بازه","neg")}
+    ${kpi("بیشترین باخت پشت‌سرهم",s.maxConsLoss)}
+    ${kpi("بهترین / بدترین",uFmt(s.best)+" / "+uFmt(s.worst))}
+    ${kpi("میانگین زمان نگهداری",fmtDur(s.avgDur))}
+    ${kpi("روزهای معاملاتی",s.days,"میانگین "+(s.n/s.days).toFixed(1)+" معامله در روز")}
+    ${kpi("معاملات چندمرحله‌ای",ts.filter(t=>t.parts>1).length,"از "+s.n+" معامله")}
   </div>
-  <div class="grid">
-    <div class="card"><h2>Equity curve (R)</h2>${equity(list)}</div>
-    <div class="card"><h2>By strategy and setup</h2>${strategyTable()}</div>
-    <div class="two">
-      <div class="card"><h2>Results per <button class="btn ${per==='Day'?'on':''}" data-per="Day">Day</button> <button class="btn ${per==='Week'?'on':''}" data-per="Week">Week</button></h2>${periodTable(list)}</div>
-      <div class="card"><h2>Trades (latest first)</h2>${tradeTable(list)}</div>
-    </div>
-  </div>`;
-  document.getElementById('reload').onclick=()=>location.reload();
-  document.getElementById('theme').onclick=()=>{
-    const r=document.documentElement,dark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#12151b';
-    r.setAttribute('data-theme',dark?'light':'dark');
-  };
-  const c=document.getElementById('clr');if(c)c.onclick=()=>{sel={cat:null,set:null};render()};
-  const mo=document.getElementById('more');if(mo)mo.onclick=()=>{tradeLimit+=50;render()};
-  app.querySelectorAll('tr.cat,tr.set').forEach(tr=>tr.onclick=()=>{
-    const cat=tr.dataset.cat,set=tr.classList.contains('set')?tr.dataset.set:null;
-    sel=(sel.cat===cat&&sel.set===set)?{cat:null,set:null}:{cat,set};render();
-  });
-  app.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
-    const k=th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=k==='name'?1:-1}render();
-  });
-  app.querySelectorAll('[data-per]').forEach(b=>b.onclick=()=>{per=b.dataset.per;render()});
+  <h2>منحنی سرمایه و افت</h2>
+  <div class="grid cols2">
+    <div class="card"><h3>منحنی سرمایه (تجمعی، ${UN()})</h3><div id="eq"></div></div>
+    <div class="card"><h3>افت از اوج (Drawdown)</h3><div id="dd"></div></div>
+  </div>
+  <h2>نتیجه‌ی روزانه</h2>
+  <div class="grid cols2">
+    <div class="card"><h3>مجموع روزانه</h3><div id="daily"></div></div>
+    <div class="card"><h3>توزیع نتیجه‌ی معاملات (R)</h3><div id="hist"></div></div>
+  </div>
+  <div id="cal" class="grid cols3" style="margin-top:12px"></div>
+  <h2>دسته‌بندی عملکرد</h2>
+  <div class="grid cols2">
+    ${breakdownCard("استراتژی",ts,t=>t.strategy)}${breakdownCard("ستاپ",ts,t=>t.setup)}
+    ${breakdownCard("جهت",ts,t=>t.dir==="Buy"?"خرید":"فروش")}${partialCard(ts)}
+    ${breakdownCard("روز هفته (ورود)",ts,t=>DOW[t.dow],{order:k=>[6,0,1,2,3,4,5].map(i=>DOW[i]).indexOf(k)})}
+    ${breakdownCard("ساعت ورود (زمان بروکر)",ts,t=>pad(t.openHour)+":00",{order:k=>+k.slice(0,2)})}
+  </div>
+  <h2>ساعت و روز (میانگین ${UN()} هر ترید)</h2>
+  <div class="card"><div id="heat" style="max-width:820px"></div></div>
+  <h2>فهرست معاملات</h2>
+  <div class="card"><div class="scroll" id="tbl"></div></div>`;
+  // منحنی‌ها
+  let eq=0,pk=0; const pts=[],dds=[]; ts.forEach((t,i)=>{ eq+=val(t); pk=Math.max(pk,eq); const lab=fmtDT(t.close).slice(5,10);
+    const tip=`#${t.ticket} · ${t.strategy} ${t.dir==="Buy"?"خرید":"فروش"}<br>${fmtDT(t.close)}<br>نتیجه ${uFmt(val(t))} · تجمعی ${uFmt(eq)}`; pts.push({y:+eq.toFixed(3),xl:lab,tip}); dds.push({y:+(eq-pk).toFixed(3),xl:lab,tip:`${fmtDT(t.close)}<br>افت ${uFmt(eq-pk)}`}); });
+  lineChart("#eq",pts,{area:true}); lineChart("#dd",dds,{color:css('--neg'),area:true,h:260});
+  const dm=new Map(); ts.forEach(t=>{ const k=dayKey(t.close); dm.set(k,(dm.get(k)||0)+val(t)); });
+  barChart("#daily",[...dm.entries()].sort().map(([k,v])=>({label:k.slice(5),v:+v.toFixed(2),tip:k+"<br>"+uFmt(v)})));
+  const bins=[]; for(let x=-3;x<5;x+=0.5) bins.push({lo:x,n:0}); ts.forEach(t=>{ let i=Math.floor((Math.max(-3,Math.min(4.99,t.R))+3)/0.5); bins[i].n++; });
+  barChart("#hist",bins.map(b=>({label:b.lo.toFixed(1),v:b.n,color:b.lo>=0?css('--pos'):css('--neg'),tip:`${b.lo.toFixed(1)}R تا ${(b.lo+.5).toFixed(1)}R: ${b.n} معامله`})));
+  heatmap(ts); calendar(ts);
+  tradeTable(ts);
 }
-render();
-})();
+
+/* ============ فیلترها و فایل ============ */
+function fillSelect(id,label,vals){ const el=$(id), cur=el.value; el.innerHTML=`<option value="">همه</option>`+[...new Set(vals)].sort().map(v=>`<option>${v}</option>`).join(""); el.value=[...el.options].some(o=>o.value===cur)?cur:""; }
+function setPreset(p){
+  const last=ALL.length?Math.max(...ALL.map(t=>t.close)):Date.now(); const day=86400000, ld=Date.UTC(new Date(last).getUTCFullYear(),new Date(last).getUTCMonth(),new Date(last).getUTCDate());
+  let from=null,to=null; if(p==="today"){from=to=ld;} else if(p==="7"){from=ld-6*day;to=ld;} else if(p==="30"){from=ld-29*day;to=ld;} else if(p==="month"){const d=new Date(ld); from=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1);to=ld;}
+  F.from=from;F.to=to; $("#dFrom").value=from?dayKey(from):""; $("#dTo").value=to?dayKey(to):"";
+  document.querySelectorAll("#presets button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));
+}
+function load(){
+  if(!D||!D.trades||!D.trades.length){ return; }
+  ALL=buildTrades(D); TR=ALL;
+  $("#drop").classList.add("hid"); $("#dash").classList.remove("hid"); $("#filters").classList.remove("hid");
+  fillSelect("#fStrategy","",ALL.map(t=>t.strategy)); fillSelect("#fSetup","",ALL.map(t=>t.setup)); fillSelect("#fDir","",ALL.map(t=>t.dir));
+  const a=Math.min(...ALL.map(t=>t.close)), b=Math.max(...ALL.map(t=>t.close));
+  $("#fileInfo").textContent=(D.symbol||"")+" — "+ALL.length+" معامله ("+dayKey(a)+" تا "+dayKey(b)+") — موجودی اولیه $"+(D.startBalance||0).toFixed(0)+" · شناور $"+(D.floating||0).toFixed(1);
+  render();
+}
+$("#dFrom").onchange=e=>{F.from=e.target.value?parseTime(e.target.value.replace(/-/g,".")):null;document.querySelectorAll("#presets button").forEach(b=>b.classList.remove("on"));render();};
+$("#dTo").onchange=e=>{F.to=e.target.value?parseTime(e.target.value.replace(/-/g,".")):null;document.querySelectorAll("#presets button").forEach(b=>b.classList.remove("on"));render();};
+document.querySelectorAll("#presets button").forEach(b=>b.onclick=()=>{setPreset(b.dataset.p);render();});
+[["#fStrategy","strategy"],["#fSetup","setup"],["#fDir","dir"]].forEach(([id,k])=>$(id).onchange=e=>{F[k]=e.target.value;render();});
+document.querySelectorAll("#unitSeg button").forEach(b=>b.onclick=()=>{UNIT=b.dataset.u;document.querySelectorAll("#unitSeg button").forEach(x=>x.classList.toggle("on",x===b));render();});
+$("#onlyPart").onchange=e=>{F.onlyPart=e.target.checked;render();};
+$("#btnReload").onclick=()=>location.reload();
+$("#btnTheme").onclick=()=>{ const r=document.documentElement; const d=r.dataset.theme==="dark"; if(d) delete r.dataset.theme; else r.dataset.theme="dark"; try{localStorage.setItem("rp_dash_theme",d?"light":"dark");}catch(e){} if(ALL.length) render(); };
+try{ if(localStorage.getItem("rp_dash_theme")==="dark") document.documentElement.dataset.theme="dark"; }catch(e){}
+load();
 </script>
 </body>
 </html>
