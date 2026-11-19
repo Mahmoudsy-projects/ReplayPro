@@ -588,7 +588,7 @@ void BuildUI()
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XDISTANCE, PM + PW);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_YDISTANCE, 2);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XSIZE, PW);
-   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 694);
+   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 719);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BGCOLOR, MG_BG);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BORDER_TYPE, BORDER_FLAT);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_COLOR, MG_BORDER);
@@ -598,12 +598,12 @@ void BuildUI()
    // boxes first (z-order)
    Rect("RP_hd", 0, 6, 208, 24, MG_HEAD, MG_HEAD);
    Rect("RP_stbox", 0, 36, 208, 68, MG_STATUS, MG_BORDER);
-   Rect("RP_ifbox", 0, 544, 208, 84, MG_INFO, MG_BORDER);
-   Rect("RP_mgbox", 0, 634, 208, 50, MG_INFO, MG_BORDER);
+   Rect("RP_ifbox", 0, 569, 208, 84, MG_INFO, MG_BORDER);
+   Rect("RP_mgbox", 0, 659, 208, 50, MG_INFO, MG_BORDER);
    Lbl("RP_ttl", "REPLAY PRO  v4.10", 10, 12, clrWhite);
    for(int i = 1; i <= 4; i++) Lbl("RP_i" + IntegerToString(i), "", 8, 41 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 549 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 640 + (i - 1) * 14, MG_CAP);
+   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 574 + (i - 1) * 15, MG_TEXT);
+   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 665 + (i - 1) * 14, MG_CAP);
 
    // replay control
    Btn("RP_next", "Next Bar", 0,   110, 102);
@@ -628,25 +628,26 @@ void BuildUI()
    Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 285, 56);
    Btn("RP_sethalf", "Set Half Close", 0, 313, 208);
    // strategy tag: click to cycle. "Tag" re-tags the selected trade (and the pending line, if any)
-   Btn("RP_strat", "", 0,   340, 208);
-   Btn("RP_setup", "", 0,   366, 158);
-   Btn("RP_tag",   "Tag", 162, 366, 46);
+   Lbl("RP_c6", "STRATEGY & SETUP", 0, 349, MG_CAP);
+   Btn("RP_strat", "", 0,   365, 208);
+   Btn("RP_setup", "", 0,   391, 158);
+   Btn("RP_tag",   "Tag", 162, 391, 46);
    UpdateTagButtons();
-   Btn("RP_padd", "ADD PEND LINE", 0,   394, 102);
-   Btn("RP_pcan", "CANCEL PEND",   106, 394, 102);
+   Btn("RP_padd", "ADD PEND LINE", 0,   419, 102);
+   Btn("RP_pcan", "CANCEL PEND",   106, 419, 102);
 
    // tools
-   Lbl("RP_c7", "TOOLS", 0, 434, MG_CAP);
-   Btn("RP_pd", "Prev Day", 0,   450, 49, 1);
-   Btn("RP_wm", "Week Map", 53,  450, 49, 1);
-   Btn("RP_kt", "Key Time", 106, 450, 49, 1);
-   Btn("RP_rr", "R/R",      159, 450, 49, 1);
-   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 480, 112);
-   Btn("RP_cal",  "Cal", 116, 479, 44);
-   Btn("RP_go",   "Go",  164, 479, 44);
-   Btn("RP_dash",  "Dashboard", 0,   508, 66);
-   Btn("RP_save",  "Save",      70,  508, 67);
-   Btn("RP_reset", "Reset",     141, 508, 67, 2);
+   Lbl("RP_c7", "TOOLS", 0, 459, MG_CAP);
+   Btn("RP_pd", "Prev Day", 0,   475, 49, 1);
+   Btn("RP_wm", "Week Map", 53,  475, 49, 1);
+   Btn("RP_kt", "Key Time", 106, 475, 49, 1);
+   Btn("RP_rr", "R/R",      159, 475, 49, 1);
+   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 505, 112);
+   Btn("RP_cal",  "Cal", 116, 504, 44);
+   Btn("RP_go",   "Go",  164, 504, 44);
+   Btn("RP_dash",  "Dashboard", 0,   533, 66);
+   Btn("RP_save",  "Save",      70,  533, 67);
+   Btn("RP_reset", "Reset",     141, 533, 67, 2);
 
    // draggable planning SL line (structure stop). DOUBLE-click it, then drag.
    DrawLine("RP_SLLINE", lastBid - InitSLDist, clrDarkOrange, STYLE_SOLID, true, 2);
