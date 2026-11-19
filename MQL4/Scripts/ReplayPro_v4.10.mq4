@@ -383,7 +383,8 @@ int    rgX[160];
 int    rgCnt = 0;
 int    gTab = 0;          // tab that objects created right now belong to
 int    curTab = 1;
-int    tgPrev[10];
+int    tgPrev[5];
+bool   hrOn[6];            // Half@R buttons 1..5 (own state, not the button STATE)
 int Xr(int x, int w) { return PM + PIN + (PW - 2 * PIN) - x; }   // distance: chart right edge -> object LEFT edge
 void Reg(string n)
 {
@@ -412,8 +413,8 @@ void SetTab(int t)
 }
 void ApplyToggles()
 {
-   string tn[10] = {"RP_play", "RP_pd", "RP_wm", "RP_kt", "RP_rr", "RP_hr1", "RP_hr2", "RP_hr3", "RP_hr4", "RP_hr5"};
-   for(int i = 0; i < 10; i++)
+   string tn[5] = {"RP_play", "RP_pd", "RP_wm", "RP_kt", "RP_rr"};
+   for(int i = 0; i < 5; i++)
    {
       int st = (ObjectGetInteger(cid, tn[i], OBJPROP_STATE) != 0) ? 1 : 0;
       if(st != tgPrev[i]) { tgPrev[i] = st; StyleBtn(tn[i], st == 1); }
@@ -575,7 +576,7 @@ string HalfText()
 {
    string t = "";
    for(int q = 1; q <= 5; q++)
-      if(ObjectGetInteger(cid, "RP_hr" + IntegerToString(q), OBJPROP_STATE) != 0)
+      if(hrOn[q])
          t = t + (t == "" ? "" : ",") + IntegerToString(q);
    return(t);
 }
@@ -620,6 +621,7 @@ void BuildUI()
 {
    rgCnt = 0; gTab = 0;
    ArrayInitialize(tgPrev, -1);
+   ArrayInitialize(hrOn, false);
    // outer panel (created first so it stays behind everything)
    ObjectCreate(cid, "RP_bg", OBJ_RECTANGLE_LABEL, 0, 0, 0);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_CORNER, CORNER_RIGHT_UPPER);
@@ -2168,7 +2170,10 @@ void OnStart()
    {
       string hs = "," + StringSubstr(sStep, 2) + ",";
       for(int q = 1; q <= 5; q++)
-         ObjectSetInteger(cid, "RP_hr" + IntegerToString(q), OBJPROP_STATE, StringFind(hs, "," + IntegerToString(q) + ",") >= 0);
+      {
+         hrOn[q] = (StringFind(hs, "," + IntegerToString(q) + ",") >= 0);
+         StyleBtn("RP_hr" + IntegerToString(q), hrOn[q]);
+      }
    }
    if(sTrl  != "") ObjectSetString(cid, "RP_trl",  OBJPROP_TEXT, sTrl);
    Refresh();
@@ -2228,6 +2233,11 @@ void OnStart()
       if(Pressed("RP_tight")) { MoveSL(+1); moved = true; }
       if(Pressed("RP_loose")) { MoveSL(-1); moved = true; }
       if(Pressed("RP_half"))  { HalfClose(); moved = true; }
+      for(int hq = 1; hq <= 5; hq++)
+      {
+         string hn = "RP_hr" + IntegerToString(hq);
+         if(Pressed(hn)) { hrOn[hq] = !hrOn[hq]; StyleBtn(hn, hrOn[hq]); }
+      }
       if(Pressed("RP_setsl")) { SetPrice(false); moved = true; }
       if(Pressed("RP_settp")) { SetPrice(true); moved = true; }
 
