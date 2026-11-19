@@ -12,7 +12,7 @@
 #property strict
 #property show_inputs
 
-// v4.10: new on-chart panel in the Risk Manager "Mono Gray" look (header, Trade/Manage/Tools tabs, status / info / message boxes).
+// v4.10: new on-chart panel in the Risk Manager "Mono Gray" look (header, Trade/Tools tabs, status / info / message boxes).
 //        Trading logic is unchanged from v4.00 (same buttons, same execution method).
 // v4.00 (NO DLL): the two DLL imports are gone.
 //  - chart refresh: ChartSetSymbolPeriod() on every open offline window (tested on RPTEST: smooth at 2 bars/s, drawings survive)
@@ -380,7 +380,7 @@ int    rgX[160];
 int    rgCnt = 0;
 int    gTab = 0;          // tab that objects created right now belong to
 int    curTab = 1;
-int    tgPrev[5];
+int    tgPrev[4];
 int Xr(int x, int w) { return PM + PIN + (PW - 2 * PIN) - x; }   // distance: chart right edge -> object LEFT edge
 void Reg(string n)
 {
@@ -409,8 +409,8 @@ void SetTab(int t)
 }
 void ApplyToggles()
 {
-   string tn[5] = {"RP_play", "RP_stats", "RP_pd", "RP_wm", "RP_kt"};
-   for(int i = 0; i < 5; i++)
+   string tn[4] = {"RP_play", "RP_pd", "RP_wm", "RP_kt"};
+   for(int i = 0; i < 4; i++)
    {
       int st = (ObjectGetInteger(cid, tn[i], OBJPROP_STATE) != 0) ? 1 : 0;
       if(st != tgPrev[i]) { tgPrev[i] = st; StyleBtn(tn[i], st == 1); }
@@ -554,7 +554,7 @@ void BuildUI()
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XDISTANCE, PM + PW);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_YDISTANCE, 2);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XSIZE, PW);
-   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 548);
+   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 580);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BGCOLOR, MG_BG);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BORDER_TYPE, BORDER_FLAT);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_COLOR, MG_BORDER);
@@ -564,15 +564,14 @@ void BuildUI()
    // ---- always visible: header, tabs, status box, info box, message box
    Rect("RP_hd", 0, 6, 208, 24, MG_HEAD, MG_HEAD);
    Lbl("RP_ttl", "REPLAY PRO  v4.10", 10, 12, clrWhite);
-   Btn("RP_tab1", "Trade",  0,   36, 66);
-   Btn("RP_tab2", "Manage", 70,  36, 67);
-   Btn("RP_tab3", "Tools",  141, 36, 67);
+   Btn("RP_tab1", "Trade",  0,   36, 102);
+   Btn("RP_tab3", "Tools",  106, 36, 102);
    Rect("RP_stbox", 0, 66, 208, 68, MG_STATUS, MG_BORDER);
-   Rect("RP_ifbox", 0, 400, 208, 84, MG_INFO, MG_BORDER);
-   Rect("RP_mgbox", 0, 490, 208, 50, MG_INFO, MG_BORDER);
+   Rect("RP_ifbox", 0, 432, 208, 84, MG_INFO, MG_BORDER);
+   Rect("RP_mgbox", 0, 522, 208, 50, MG_INFO, MG_BORDER);
    for(int i = 1; i <= 4; i++) Lbl("RP_i" + IntegerToString(i), "", 8, 71 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 405 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 496 + (i - 1) * 14, MG_CAP);
+   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 437 + (i - 1) * 15, MG_TEXT);
+   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 528 + (i - 1) * 14, MG_CAP);
 
    // ---- tab 1: TRADE (replay control + execution)
    gTab = 1;
@@ -600,41 +599,33 @@ void BuildUI()
    Btn("RP_setup", "", 0,   372, 158);
    Btn("RP_tag",   "Tag", 162, 372, 46);
    UpdateTagButtons();
+   Btn("RP_padd", "ADD PEND LINE", 0,   400, 102);
+   Btn("RP_pcan", "CANCEL PEND",   106, 400, 102);
 
-   // ---- tab 2: MANAGE (acts on the SELECTED trade / pending line / jump)
-   gTab = 2;
-   Lbl("RP_c3", "STOPS & TARGETS", 0, 141, MG_CAP);
-   Lbl("RP_l6", "Price", 0, 164, MG_CAP);
-   Edt("RP_px", "", 44, 160, 164);
-   Btn("RP_setsl", "Set SL", 0,   186, 102);
-   Btn("RP_settp", "Set TP", 106, 186, 102);
-   Lbl("RP_c4", "TRAILING", 0, 218, MG_CAP);
-   Lbl("RP_l4", "Step$", 0, 238, MG_CAP);
-   Edt("RP_step", DoubleToString(StepDollar, 2), 44, 234, 56);
-   Lbl("RP_l5", "Dist$", 110, 238, MG_CAP);
-   Edt("RP_trl", DoubleToString(TrailDollar, 2), 152, 234, 56);
-   Btn("RP_trail", "Trail", 0, 260, 208);
-   Lbl("RP_c5", "PENDING", 0, 292, MG_CAP);
-   Btn("RP_padd", "ADD PEND LINE", 0,   308, 102);
-   Btn("RP_pcan", "CANCEL PEND",   106, 308, 102);
-   Lbl("RP_c6", "JUMP TO DATE", 0, 340, MG_CAP);
-   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 356, 112);
-   Btn("RP_cal",  "Cal", 116, 355, 44);
-   Btn("RP_go",   "Go",  164, 355, 44);
-
-   // ---- tab 3: TOOLS (levels, reports, session summary)
+   // ---- tab 3: TOOLS (levels, jump, selected-trade stops, reports)
    gTab = 3;
    Lbl("RP_c7", "LEVELS", 0, 141, MG_CAP);
    Btn("RP_pd", "Prev Day", 0,   156, 66, 1);
    Btn("RP_wm", "Week Map", 70,  156, 67, 1);
    Btn("RP_kt", "Key Time", 141, 156, 67, 1);
-   Lbl("RP_c8", "REPORTS", 0, 188, MG_CAP);
-   Btn("RP_stats", "Stats",     0,   204, 102, 1);
-   Btn("RP_dash",  "Dashboard", 106, 204, 102);
-   Btn("RP_save",  "Save Summary", 0,   232, 102);
-   Btn("RP_reset", "Reset",        106, 232, 102, 2);
-   Lbl("RP_c9", "SESSION", 0, 264, MG_CAP);
-   for(int i = 1; i <= 4; i++) Lbl("RP_r" + IntegerToString(i), "", 0, 282 + (i - 1) * 15, MG_TEXT);
+   Lbl("RP_c6", "JUMP TO DATE", 0, 188, MG_CAP);
+   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 204, 112);
+   Btn("RP_cal",  "Cal", 116, 203, 44);
+   Btn("RP_go",   "Go",  164, 203, 44);
+   Lbl("RP_c3", "SELECTED TRADE", 0, 236, MG_CAP);
+   Lbl("RP_l6", "Price", 0, 260, MG_CAP);
+   Edt("RP_px", "", 44, 256, 164);
+   Btn("RP_setsl", "Set SL", 0,   282, 102);
+   Btn("RP_settp", "Set TP", 106, 282, 102);
+   Lbl("RP_l4", "Step$", 0, 316, MG_CAP);
+   Edt("RP_step", DoubleToString(StepDollar, 2), 44, 312, 56);
+   Lbl("RP_l5", "Dist$", 110, 316, MG_CAP);
+   Edt("RP_trl", DoubleToString(TrailDollar, 2), 152, 312, 56);
+   Btn("RP_trail", "Trail", 0, 338, 208);
+   Lbl("RP_c8", "REPORTS", 0, 370, MG_CAP);
+   Btn("RP_dash",  "Dashboard", 0,   386, 66);
+   Btn("RP_save",  "Save",      70,  386, 67);
+   Btn("RP_reset", "Reset",     141, 386, 67, 2);
 
    // draggable planning SL line (structure stop). DOUBLE-click it, then drag.
    DrawLine("RP_SLLINE", lastBid - InitSLDist, clrYellow, STYLE_SOLID, true, 2);
@@ -2081,7 +2072,6 @@ void OnStart()
       miss = 0;
       if(Pressed("RP_exit")) break;
       if(Pressed("RP_tab1")) SetTab(1);
-      if(Pressed("RP_tab2")) SetTab(2);
       if(Pressed("RP_tab3")) SetTab(3);
 
       SyncLines();
@@ -2136,7 +2126,7 @@ void OnStart()
          else { ObjectSetInteger(cid, "RP_play", OBJPROP_STATE, false); lastMsg = "End of data."; moved = true; }
       }
 
-      bool statsOn = (ObjectGetInteger(cid, "RP_stats", OBJPROP_STATE) != 0);
+      bool statsOn = false;      // v4.10: Stats overlay removed (use the Dashboard)
       if(statsOn != statsPrev)
       {
          statsPrev = statsOn;
