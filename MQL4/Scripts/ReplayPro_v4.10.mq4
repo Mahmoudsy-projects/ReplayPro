@@ -553,6 +553,7 @@ int ParseLevels(string txt, double &lv[][6], int row)
    string parts[];
    int np = StringSplit(txt, ',', parts);
    double tmp[6];
+   ArrayInitialize(tmp, 0.0);
    int n = 0;
    for(int i = 0; i < np && n < 6; i++)
    {
