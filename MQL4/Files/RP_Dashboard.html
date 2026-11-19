@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReplayPro Dashboard</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1b1f27; --mute:#6b7280; --line:#e3e6eb;
+  --pos:#0f9d6b; --neg:#d6453d; --acc:#3b6fd4; --band:#eef1f6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151b; --card:#1b1f27; --ink:#e7eaf0; --mute:#8b93a1; --line:#2a303b;
+    --pos:#35c28e; --neg:#ef6b63; --acc:#6c9bf0; --band:#222833;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12151b; --card:#1b1f27; --ink:#e7eaf0; --mute:#8b93a1; --line:#2a303b;
+  --pos:#35c28e; --neg:#ef6b63; --acc:#6c9bf0; --band:#222833;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1{font-size:20px;margin:0}
+.sub{color:var(--mute);font-size:13px}
+.btn{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.prog{height:6px;background:var(--band);border-radius:4px;overflow:hidden;margin-top:6px;width:240px}
+.prog>i{display:block;height:100%;background:var(--acc)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .l{color:var(--mute);font-size:12px}
+.kpi .v{font-size:22px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+h2{font-size:14px;margin:0 0 10px;font-weight:650}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chip{background:var(--band);border-radius:999px;padding:3px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
+.chip b{cursor:pointer}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mute);font-weight:550;font-size:12px;cursor:pointer;user-select:none}
+th:first-child,td:first-child{text-align:left}
+tr.cat td{font-weight:600;background:var(--band);cursor:pointer}
+tr.set td:first-child{padding-left:26px;color:var(--ink)}
+tr.set{cursor:pointer}
+tr.set:hover td,tr.cat:hover td{filter:brightness(.97)}
+tr.act td{outline:1px solid var(--acc);outline-offset:-1px}
+.bar{display:inline-block;width:90px;height:8px;position:relative;vertical-align:middle;background:var(--band);border-radius:3px}
+.bar i{position:absolute;top:0;height:100%;border-radius:3px}
+.scroll{overflow-x:auto}
+svg text{fill:var(--mute);font-size:11px}
+.empty{color:var(--mute);padding:24px;text-align:center}
+.two{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:900px){.two{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script src="RP_data.txt"></script>
+<script>
+(function(){
+const app=document.getElementById('app');
+const D=window.RP_DATA;
+if(!D){app.innerHTML='<div class="card empty">No data found. Press <b>Dashboard</b> in ReplayPro so it writes RP_data.txt next to this file.</div>';return;}
+
+const T=D.trades.map((r,i)=>({n:i+1,open:r[0],close:r[1],side:r[2],lots:r[3],entry:r[4],fill:r[5],risk:r[6],pl:r[7],r:r[8],cat:r[9]||'UNTAGGED',set:r[10]||''}));
+let sel={cat:null,set:null}, per='Day', sortK='r', sortDir=-1, tradeLimit=30;
+
+const f2=(x,d=2)=>Number(x).toFixed(d);
+const sg=(x,d=2)=>(x>0?'+':'')+Number(x).toFixed(d);
+const cls=x=>x>0?'pos':(x<0?'neg':'');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function stats(list){
+  const s={n:list.length,w:0,r:0,p:0,gw:0,gl:0,dd:0,best:-1e9,worst:1e9};
+  let cum=0,peak=0;
+  for(const t of list){
+    s.r+=t.r; s.p+=t.pl; cum+=t.r;
+    if(t.r>0){s.w++;s.gw+=t.r}else s.gl+=t.r;
+    if(cum>peak)peak=cum; if(peak-cum>s.dd)s.dd=peak-cum;
+    if(t.r>s.best)s.best=t.r; if(t.r<s.worst)s.worst=t.r;
+  }
+  s.wr=s.n?100*s.w/s.n:0; s.avg=s.n?s.r/s.n:0; s.pf=s.gl<0?s.gw/-s.gl:(s.gw>0?Infinity:0);
+  if(!s.n){s.best=0;s.worst=0}
+  return s;
+}
+const pfT=s=>s.pf===Infinity?'∞':(s.gl<0?f2(s.pf):'-');
+const filtered=()=>T.filter(t=>(!sel.cat||t.cat===sel.cat)&&(!sel.set||t.set===sel.set));
+
+function kpi(l,v,c){return `<div class="card kpi"><div class="l">${l}</div><div class="v ${c||''}">${v}</div></div>`}
+
+function equity(list){
+  if(!list.length)return '<div class="empty">No closed trades.</div>';
+  const W=820,H=260,L=44,R=12,Tp=12,B=26;
+  let cum=0;const pts=[{i:0,v:0}];
+  list.forEach((t,i)=>{cum+=t.r;pts.push({i:i+1,v:cum,t})});
+  let mn=Math.min(...pts.map(p=>p.v),0),mx=Math.max(...pts.map(p=>p.v),0);
+  if(mx-mn<1){mx+=.5;mn-=.5}
+  const pad=(mx-mn)*.08;mx+=pad;mn-=pad;
+  const X=i=>L+(W-L-R)*(list.length?i/list.length:0), Y=v=>Tp+(H-Tp-B)*(1-(v-mn)/(mx-mn));
+  const step=niceStep((mx-mn)/4);let g='';
+  for(let v=Math.ceil(mn/step)*step;v<=mx;v+=step){
+    g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${f2(v,step<1?1:0)}R</text>`;
+  }
+  const zero=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--mute)" stroke-dasharray="4 3"/>`;
+  const path=pts.map((p,k)=>(k?'L':'M')+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join(' ');
+  const area=path+` L${X(list.length)} ${Y(0)} L${X(0)} ${Y(0)} Z`;
+  const col=cum>=0?'var(--pos)':'var(--neg)';
+  const dots=list.length<=150?pts.slice(1).map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3.2" fill="${p.t.r>0?'var(--pos)':'var(--neg)'}"><title>#${p.t.n} ${esc(p.t.cat)}/${esc(p.t.set)}  ${sg(p.t.r)}R  (cum ${sg(p.v)}R)\n${esc(p.t.close)}</title></circle>`).join(''):'';
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Equity curve in R">${g}${zero}<path d="${area}" fill="${col}" opacity=".08"/><path d="${path}" fill="none" stroke="${col}" stroke-width="2"/>${dots}<text x="${L}" y="${H-6}">${esc(list[0].close.slice(0,10))}</text><text x="${W-R}" y="${H-6}" text-anchor="end">${esc(list[list.length-1].close.slice(0,10))}</text></svg>`;
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));const m=x/p;return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p}
+
+function barCell(v,maxAbs){
+  const w=maxAbs?Math.min(50,50*Math.abs(v)/maxAbs):0;
+  const st=v>=0?`left:50%;width:${w}%;background:var(--pos)`:`right:50%;width:${w}%;background:var(--neg)`;
+  return `<span class="bar"><i style="${st}"></i></span>`;
+}
+
+function strategyTable(){
+  const cats=new Map();
+  for(const t of T){
+    if(!cats.has(t.cat))cats.set(t.cat,{all:[],sets:new Map()});
+    const c=cats.get(t.cat);c.all.push(t);
+    if(!c.sets.has(t.set))c.sets.set(t.set,[]);c.sets.get(t.set).push(t);
+  }
+  const rows=[];
+  for(const [cn,c] of cats){
+    const s=stats(c.all);rows.push({k:'cat',cat:cn,set:'',s,sub:[...c.sets].map(([sn,l])=>({k:'set',cat:cn,set:sn,s:stats(l)}))});
+  }
+  const val=o=>({r:o.s.r,n:o.s.n,wr:o.s.wr,avg:o.s.avg,pf:o.s.pf===Infinity?1e9:o.s.pf,name:o.set||o.cat}[sortK]);
+  const cmp=(a,b)=>{const x=val(a),y=val(b);return sortK==='name'?sortDir*-String(x).localeCompare(String(y)):sortDir*(x-y)};
+  rows.sort(cmp);rows.forEach(r=>r.sub.sort(cmp));
+  let maxAbs=0;rows.forEach(r=>{maxAbs=Math.max(maxAbs,Math.abs(r.s.r));r.sub.forEach(x=>maxAbs=Math.max(maxAbs,Math.abs(x.s.r)))});
+  const th=(k,l)=>`<th data-k="${k}">${l}${sortK===k?(sortDir<0?' ↓':' ↑'):''}</th>`;
+  let h=`<div class="scroll"><table><thead><tr>${th('name','Strategy / Setup')}${th('n','Trades')}${th('wr','Win %')}${th('r','Total R')}<th></th>${th('avg','Avg R')}${th('pf','PF')}</tr></thead><tbody>`;
+  const line=(o)=>{
+    const a=(sel.cat===o.cat&&sel.set===(o.set||null))?' act':'';
+    return `<tr class="${o.k}${a}" data-cat="${esc(o.cat)}" data-set="${esc(o.set)}"><td>${esc(o.k==='cat'?o.cat:(o.set||'(no setup)'))}</td><td>${o.s.n}</td><td>${f2(o.s.wr,0)}%</td><td class="${cls(o.s.r)}">${sg(o.s.r)}</td><td>${barCell(o.s.r,maxAbs)}</td><td class="${cls(o.s.avg)}">${sg(o.s.avg)}</td><td>${pfT(o.s)}</td></tr>`;
+  };
+  for(const r of rows){h+=line(r);r.sub.forEach(x=>h+=line(x))}
+  return h+'</tbody></table></div>';
+}
+
+function periodTable(list){
+  const m=new Map();
+  for(const t of list){
+    const d=t.close.slice(0,10);let key=d;
+    if(per==='Week'){
+      const [y,mo,da]=d.split('.').map(Number);const dt=new Date(Date.UTC(y,mo-1,da));
+      const wd=(dt.getUTCDay()+6)%7;dt.setUTCDate(dt.getUTCDate()-wd);key=dt.toISOString().slice(0,10).replace(/-/g,'.');
+    }
+    if(!m.has(key))m.set(key,[]);m.get(key).push(t);
+  }
+  const rows=[...m].sort((a,b)=>a[0]<b[0]?1:-1).map(([k,l])=>({k,s:stats(l)}));
+  if(!rows.length)return '<div class="empty">No data.</div>';
+  const maxAbs=Math.max(...rows.map(r=>Math.abs(r.s.r)));
+  return `<div class="scroll"><table><thead><tr><th>${per==='Week'?'Week (Mon)':'Day'}</th><th>Trades</th><th>Win %</th><th>R</th><th></th><th>$</th></tr></thead><tbody>`+
+    rows.slice(0,40).map(r=>`<tr><td>${r.k}</td><td>${r.s.n}</td><td>${f2(r.s.wr,0)}%</td><td class="${cls(r.s.r)}">${sg(r.s.r)}</td><td>${barCell(r.s.r,maxAbs)}</td><td class="${cls(r.s.p)}">${sg(r.s.p,1)}</td></tr>`).join('')+'</tbody></table></div>';
+}
+
+function tradeTable(list){
+  if(!list.length)return '<div class="empty">No trades.</div>';
+  const rows=[...list].reverse().slice(0,tradeLimit);
+  let h=`<div class="scroll"><table><thead><tr><th>#</th><th>Closed</th><th>Side</th><th>Strategy</th><th>Setup</th><th>Lots</th><th>R</th><th>$</th></tr></thead><tbody>`;
+  for(const t of rows)h+=`<tr><td>${t.n}</td><td>${esc(t.close)}</td><td>${esc(t.side)}</td><td style="text-align:left">${esc(t.cat)}</td><td style="text-align:left">${esc(t.set)}</td><td>${f2(t.lots)}</td><td class="${cls(t.r)}">${sg(t.r)}</td><td class="${cls(t.pl)}">${sg(t.pl,1)}</td></tr>`;
+  h+='</tbody></table></div>';
+  if(list.length>tradeLimit)h+=`<div style="margin-top:10px"><button class="btn" id="more">Show more</button></div>`;
+  return h;
+}
+
+function render(){
+  const all=stats(T),list=filtered(),s=stats(list);
+  const pct=D.target>0?Math.min(100,100*T.length/D.target):0;
+  const filt=(sel.cat?`<span class="chip">${esc(sel.cat)}${sel.set?' / '+esc(sel.set):''} <b id="clr" title="Clear filter">✕</b></span>`:'<span class="sub">Click a strategy or setup to filter the charts and trades.</span>');
+  app.innerHTML=`
+  <header>
+    <div><h1>ReplayPro · ${esc(D.batch)}</h1>
+      <div class="sub">Replay time ${esc(D.replayTime)} · open trades ${D.open} · floating ${sg(D.floating,1)}$ · balance ${f2(D.startBalance+all.p,0)}$</div>
+      <div class="sub" style="margin-top:4px">${T.length} / ${D.target} trades</div><div class="prog"><i style="width:${pct}%"></i></div></div>
+    <div><button class="btn" id="reload">Reload</button> <button class="btn" id="theme">Theme</button></div>
+  </header>
+  <div class="filters">${filt}</div>
+  <div class="kpis">
+    ${kpi('Trades',s.n)}${kpi('Win rate',f2(s.wr,0)+'%')}${kpi('Total R',sg(s.r),cls(s.r))}${kpi('Net $',sg(s.p,0),cls(s.p))}
+    ${kpi('Profit factor',pfT(s))}${kpi('Avg R',sg(s.avg),cls(s.avg))}${kpi('Max drawdown',f2(s.dd)+'R')}${kpi('Best / Worst',sg(s.best)+' / '+sg(s.worst))}
+  </div>
+  <div class="grid">
+    <div class="card"><h2>Equity curve (R)</h2>${equity(list)}</div>
+    <div class="card"><h2>By strategy and setup</h2>${strategyTable()}</div>
+    <div class="two">
+      <div class="card"><h2>Results per <button class="btn ${per==='Day'?'on':''}" data-per="Day">Day</button> <button class="btn ${per==='Week'?'on':''}" data-per="Week">Week</button></h2>${periodTable(list)}</div>
+      <div class="card"><h2>Trades (latest first)</h2>${tradeTable(list)}</div>
+    </div>
+  </div>`;
+  document.getElementById('reload').onclick=()=>location.reload();
+  document.getElementById('theme').onclick=()=>{
+    const r=document.documentElement,dark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#12151b';
+    r.setAttribute('data-theme',dark?'light':'dark');
+  };
+  const c=document.getElementById('clr');if(c)c.onclick=()=>{sel={cat:null,set:null};render()};
+  const mo=document.getElementById('more');if(mo)mo.onclick=()=>{tradeLimit+=50;render()};
+  app.querySelectorAll('tr.cat,tr.set').forEach(tr=>tr.onclick=()=>{
+    const cat=tr.dataset.cat,set=tr.classList.contains('set')?tr.dataset.set:null;
+    sel=(sel.cat===cat&&sel.set===set)?{cat:null,set:null}:{cat,set};render();
+  });
+  app.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=k==='name'?1:-1}render();
+  });
+  app.querySelectorAll('[data-per]').forEach(b=>b.onclick=()=>{per=b.dataset.per;render()});
+}
+render();
+})();
+</script>
+</body>
+</html>
