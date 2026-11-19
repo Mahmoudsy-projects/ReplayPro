@@ -90,3 +90,7 @@
 - فارسی‌زبان، تریدر طلا (XAUUSD@ روی بروکر با ساعت سرور GMT+3)، تایم‌فریم اصلی M5 (تحلیل روی M15)، ورودها بر پایه‌ی Al Brooks‑style ستاپ‌ها (Spike / Channel / Range / Cycle).
 - جریان کار: بچ ۱۰۰تایی برای هر ستاپ، حداکثر ۲ ترید در هر نشست، لاگ و آمار برای مقایسه‌ی ستاپ‌ها.
 - ارتباط: دکمه‌ی دانلود فایل را می‌خواهد؛ اگر فایل فقط در چت نشان داده شود، شکایت می‌کند. خطاها را با اسکرین‌شات می‌فرستد.
+
+---
+## v4.10 (2026-11-19)
+پنل Mono Gray هم‌شکل Risk Manager، رنگ چارت = تم ۵ هاب، Half Close اضافه؛ Trail/Step/Dist/Stats/Price/Set SL/Set TP از پنل حذف. فایل: `MQL4/Scripts/ReplayPro_v4.10.mq4`. راهنما: `docs/ReplayPro_User_Guide_v4.10.pdf`. جزئیات: `docs/CHANGELOG_ReplayPro_v4.10_MonoGray.md`.
