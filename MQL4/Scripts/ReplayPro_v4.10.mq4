@@ -72,6 +72,9 @@ int      tN = 0, nextId = 1, selId = 0;
 int      tId[MAXT], tType[MAXT];
 datetime tTime[MAXT];
 double   tEntry[MAXT], tLots[MAXT], tSL[MAXT], tTP[MAXT], tRisk[MAXT], tTrail[MAXT];
+double   tDist[MAXT];                // price distance entry -> initial SL (1R)
+double   tLv[MAXT][6];               // auto half-close levels in R (ascending)
+int      tLvN[MAXT], tLvK[MAXT];     // number of levels / next level to fire
 string   tCat[MAXT], tStp[MAXT];      // strategy tag of each open trade (category / setup)
 double   closedPL = 0, sumR = 0;
 int      nWin = 0, nLoss = 0;
@@ -544,6 +547,85 @@ void CycleSetup()
    lastMsg = "Tag: " + TagFull(TagC(), TagS());
 }
 
+// "1,3" -> sorted levels in R (max 6). Fills row `row` of lv[][] when row >= 0; returns the count.
+int ParseLevels(string txt, double &lv[][6], int row)
+{
+   string parts[];
+   int np = StringSplit(txt, ',', parts);
+   double tmp[6];
+   int n = 0;
+   for(int i = 0; i < np && n < 6; i++)
+   {
+      double v = StringToDouble(parts[i]);
+      if(v > 0) { tmp[n] = v; n++; }
+   }
+   for(int a = 1; a < n; a++)              // insertion sort
+   {
+      double x = tmp[a];
+      int b = a - 1;
+      while(b >= 0 && tmp[b] > x) { tmp[b + 1] = tmp[b]; b--; }
+      tmp[b + 1] = x;
+   }
+   if(row >= 0) for(int k = 0; k < n; k++) lv[row][k] = tmp[k];
+   return(n);
+}
+// price of auto half-close level k of trade i
+double HalfPrice(int i, int k)
+{
+   return(NormalizeDouble((tType[i] == 0) ? tEntry[i] + tLv[i][k] * tDist[i] : tEntry[i] - tLv[i][k] * tDist[i], digitsV));
+}
+// dotted lines at the levels not yet fired
+void DrawHalfLines(int i)
+{
+   string k = IntegerToString(tId[i]);
+   for(int q = 0; q < 6; q++)
+   {
+      string n = "RP_H" + k + "_" + IntegerToString(q);
+      ObjectDelete(cid, n);
+      if(q < tLvK[i] || q >= tLvN[i]) continue;
+      DrawLine(n, HalfPrice(i, q), C'90,90,90', STYLE_DOT, false, 1);
+      ObjectSetString(cid, n, OBJPROP_TEXT, "1/2 @ " + DoubleToString(tLv[i][q], 1) + "R");
+   }
+}
+// planning preview: dotted lines at the Half@R levels and TP(R) from the orange SL line (only while no trade is open)
+string pvKey = "";
+void ClearPreview()
+{
+   for(int q = 0; q < 7; q++) ObjectDelete(cid, "RP_PV" + IntegerToString(q));
+   pvKey = "";
+}
+void UpdatePreview()
+{
+   if(tN > 0 || ObjectFind(cid, "RP_SLLINE") < 0) { if(pvKey != "") ClearPreview(); return; }
+   double slp = ObjectGetDouble(cid, "RP_SLLINE", OBJPROP_PRICE);
+   string ht = ObjectGetString(cid, "RP_half", OBJPROP_TEXT);
+   double tpr = ReadEdit("RP_tpr");
+   string key = DoubleToString(slp, digitsV) + "|" + DoubleToString(lastBid, digitsV) + "|" + ht + "|" + DoubleToString(tpr, 2);
+   if(key == pvKey) return;
+   ClearPreview();
+   pvKey = key;
+   int type = (slp < lastBid) ? 0 : 1;
+   double e = (type == 0) ? lastBid + SpreadPrice : lastBid;
+   double dist = MathAbs(e - slp);
+   if(dist <= 0) return;
+   double lv[1][6];
+   int n = ParseLevels(ht, lv, 0);
+   int m = 0;
+   for(int k = 0; k < n; k++)
+   {
+      double pr = NormalizeDouble((type == 0) ? e + lv[0][k] * dist : e - lv[0][k] * dist, digitsV);
+      string nm = "RP_PV" + IntegerToString(m); m++;
+      DrawLine(nm, pr, C'90,90,90', STYLE_DOT, false, 1);
+      ObjectSetString(cid, nm, OBJPROP_TEXT, "preview 1/2 @ " + DoubleToString(lv[0][k], 1) + "R");
+   }
+   if(tpr > 0)
+   {
+      double pr = NormalizeDouble((type == 0) ? e + tpr * dist : e - tpr * dist, digitsV);
+      string nm = "RP_PV" + IntegerToString(m);
+      DrawLine(nm, pr, C'40,120,70', STYLE_DOT, false, 1);
+      ObjectSetString(cid, nm, OBJPROP_TEXT, "preview TP @ " + DoubleToString(tpr, 1) + "R");
+   }
+}
 void BuildUI()
 {
    rgCnt = 0; gTab = 0;
@@ -554,7 +636,7 @@ void BuildUI()
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XDISTANCE, PM + PW);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_YDISTANCE, 2);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_XSIZE, PW);
-   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 666);
+   ObjectSetInteger(cid, "RP_bg", OBJPROP_YSIZE, 694);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BGCOLOR, MG_BG);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_BORDER_TYPE, BORDER_FLAT);
    ObjectSetInteger(cid, "RP_bg", OBJPROP_COLOR, MG_BORDER);
@@ -564,12 +646,12 @@ void BuildUI()
    // boxes first (z-order)
    Rect("RP_hd", 0, 6, 208, 24, MG_HEAD, MG_HEAD);
    Rect("RP_stbox", 0, 36, 208, 68, MG_STATUS, MG_BORDER);
-   Rect("RP_ifbox", 0, 516, 208, 84, MG_INFO, MG_BORDER);
-   Rect("RP_mgbox", 0, 606, 208, 50, MG_INFO, MG_BORDER);
+   Rect("RP_ifbox", 0, 544, 208, 84, MG_INFO, MG_BORDER);
+   Rect("RP_mgbox", 0, 634, 208, 50, MG_INFO, MG_BORDER);
    Lbl("RP_ttl", "REPLAY PRO  v4.10", 10, 12, clrWhite);
    for(int i = 1; i <= 4; i++) Lbl("RP_i" + IntegerToString(i), "", 8, 41 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 521 + (i - 1) * 15, MG_TEXT);
-   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 612 + (i - 1) * 14, MG_CAP);
+   for(int i = 1; i <= 5; i++) Lbl("RP_s" + IntegerToString(i), "", 8, 549 + (i - 1) * 15, MG_TEXT);
+   for(int i = 1; i <= 3; i++) Lbl("RP_mg" + IntegerToString(i), "", 8, 640 + (i - 1) * 14, MG_CAP);
 
    // replay control
    Btn("RP_next", "Next Bar", 0,   110, 102);
@@ -592,25 +674,27 @@ void BuildUI()
    Edt("RP_risk", DoubleToString(RiskPercent, 2), 42,  285, 56);
    Lbl("RP_l2", "TP(R)", 110, 289, MG_CAP);
    Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 285, 56);
+   Lbl("RP_l3", "Half@R", 0, 317, MG_CAP);
+   Edt("RP_half", "1", 50, 313, 158);
    // strategy tag: click to cycle. "Tag" re-tags the selected trade (and the pending line, if any)
-   Btn("RP_strat", "", 0,   312, 208);
-   Btn("RP_setup", "", 0,   338, 158);
-   Btn("RP_tag",   "Tag", 162, 338, 46);
+   Btn("RP_strat", "", 0,   340, 208);
+   Btn("RP_setup", "", 0,   366, 158);
+   Btn("RP_tag",   "Tag", 162, 366, 46);
    UpdateTagButtons();
-   Btn("RP_padd", "ADD PEND LINE", 0,   366, 102);
-   Btn("RP_pcan", "CANCEL PEND",   106, 366, 102);
+   Btn("RP_padd", "ADD PEND LINE", 0,   394, 102);
+   Btn("RP_pcan", "CANCEL PEND",   106, 394, 102);
 
    // tools
-   Lbl("RP_c7", "TOOLS", 0, 406, MG_CAP);
-   Btn("RP_pd", "Prev Day", 0,   422, 66, 1);
-   Btn("RP_wm", "Week Map", 70,  422, 67, 1);
-   Btn("RP_kt", "Key Time", 141, 422, 67, 1);
-   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 452, 112);
-   Btn("RP_cal",  "Cal", 116, 451, 44);
-   Btn("RP_go",   "Go",  164, 451, 44);
-   Btn("RP_dash",  "Dashboard", 0,   480, 66);
-   Btn("RP_save",  "Save",      70,  480, 67);
-   Btn("RP_reset", "Reset",     141, 480, 67, 2);
+   Lbl("RP_c7", "TOOLS", 0, 434, MG_CAP);
+   Btn("RP_pd", "Prev Day", 0,   450, 66, 1);
+   Btn("RP_wm", "Week Map", 70,  450, 67, 1);
+   Btn("RP_kt", "Key Time", 141, 450, 67, 1);
+   Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 480, 112);
+   Btn("RP_cal",  "Cal", 116, 479, 44);
+   Btn("RP_go",   "Go",  164, 479, 44);
+   Btn("RP_dash",  "Dashboard", 0,   508, 66);
+   Btn("RP_save",  "Save",      70,  508, 67);
+   Btn("RP_reset", "Reset",     141, 508, 67, 2);
 
    // draggable planning SL line (structure stop). DOUBLE-click it, then drag.
    DrawLine("RP_SLLINE", lastBid - InitSLDist, clrDarkOrange, STYLE_SOLID, true, 2);
@@ -703,6 +787,7 @@ void DelLines(int id)
    ObjectDelete(cid, "RP_E" + k);
    ObjectDelete(cid, "RP_S" + k);
    ObjectDelete(cid, "RP_T" + k);
+   for(int q = 0; q < 6; q++) ObjectDelete(cid, "RP_H" + k + "_" + IntegerToString(q));
 }
 //--------------------------------------------------------------------
 // Grouping of closed trades by close day (mode 0) or by week starting Monday (mode 1)
@@ -963,7 +1048,7 @@ void SaveState()
    {
       a = ObjectGetString(cid, "RP_risk", OBJPROP_TEXT);
       b = ObjectGetString(cid, "RP_tpr",  OBJPROP_TEXT);
-      c = ObjectGetString(cid, "RP_step", OBJPROP_TEXT);
+      c = "h:" + ObjectGetString(cid, "RP_half", OBJPROP_TEXT);
       d = ObjectGetString(cid, "RP_trl",  OBJPROP_TEXT);
    }
    FileWrite(f, TimeToString(lastT, TIME_DATE | TIME_MINUTES), IntegerToString(hN), a, b, c, d, TagC(), TagS());
@@ -1260,6 +1345,9 @@ bool OpenTradeAt(int type, double e, double slp, string cat, string stp)
    tId[tN] = id; tType[tN] = type; tEntry[tN] = e; tLots[tN] = lots;
    tSL[tN] = sl; tTP[tN] = tp; tTime[tN] = lastT; tRisk[tN] = lots * dist * ContractSize; tTrail[tN] = 0;
    tCat[tN] = cat; tStp[tN] = stp;
+   tDist[tN] = dist;
+   tLvN[tN] = ParseLevels(ObjectGetString(cid, "RP_half", OBJPROP_TEXT), tLv, tN);
+   tLvK[tN] = 0;
    tN++;
    selId = id;
 
@@ -1267,6 +1355,7 @@ bool OpenTradeAt(int type, double e, double slp, string cat, string stp)
    DrawLine("RP_E" + k, e, (type == 0 ? clrDodgerBlue : clrOrangeRed), STYLE_SOLID, false, 1);
    DrawLine("RP_S" + k, sl, clrRed, STYLE_DOT, true, 1);
    if(tp > 0) DrawLine("RP_T" + k, tp, clrLime, STYLE_DOT, true, 1);
+   DrawHalfLines(tN - 1);
    ApplySel();
    lastMsg = StringFormat("Opened #%d %s %.2f lots @ %s | risk %.1f$ | %s", id, (type == 0 ? "BUY" : "SELL"),
                           lots, DoubleToString(e, digitsV), tRisk[tN - 1], TagFull(cat, stp));
@@ -1277,8 +1366,8 @@ void OpenTrade(int type)
    if(ObjectFind(cid, "RP_SLLINE") < 0) { lastMsg = "SL line is missing."; return; }
    double slp = ObjectGetDouble(cid, "RP_SLLINE", OBJPROP_PRICE);
    double e = (type == 0) ? lastBid + SpreadPrice : lastBid;
-   if(type == 0 && slp >= e) { lastMsg = "BUY: drag the yellow SL line BELOW price."; return; }
-   if(type == 1 && slp <= e) { lastMsg = "SELL: drag the yellow SL line ABOVE price."; return; }
+   if(type == 0 && slp >= e) { lastMsg = "BUY: drag the orange SL line BELOW price."; return; }
+   if(type == 1 && slp <= e) { lastMsg = "SELL: drag the orange SL line ABOVE price."; return; }
    OpenTradeAt(type, e, slp, TagC(), TagS());
 }
 // re-tag the selected trade (and the pending line, if one exists) with the current selection
@@ -1380,6 +1469,8 @@ void CloseTrade(int i, double fill)
       tId[j] = tId[j+1]; tType[j] = tType[j+1]; tEntry[j] = tEntry[j+1]; tLots[j] = tLots[j+1];
       tSL[j] = tSL[j+1]; tTP[j] = tTP[j+1]; tTime[j] = tTime[j+1]; tRisk[j] = tRisk[j+1]; tTrail[j] = tTrail[j+1];
       tCat[j] = tCat[j+1]; tStp[j] = tStp[j+1];
+      tDist[j] = tDist[j+1]; tLvN[j] = tLvN[j+1]; tLvK[j] = tLvK[j+1];
+      for(int q = 0; q < 6; q++) tLv[j][q] = tLv[j+1][q];
    }
    tN--;
 }
@@ -1421,13 +1512,11 @@ void NextSel()
    ApplySel();
    lastMsg = StringFormat("Selected #%d", selId);
 }
-void HalfClose()
+// closes `half` lots of trade i at `fill`; the rest keeps running with proportional risk. Returns false if the lot cannot be split.
+bool PartialClose(int i, double fill, string label)
 {
-   int i = SelIdx();
-   if(i < 0) { lastMsg = "No open trade."; return; }
    double half = MathFloor(tLots[i] / 2.0 / LotStep + 0.000000001) * LotStep;
-   if(half < MinLot - 0.0000001 || tLots[i] - half < MinLot - 0.0000001) { lastMsg = "Lot too small to split."; return; }
-   double fill = MarketFill(i);
+   if(half < MinLot - 0.0000001 || tLots[i] - half < MinLot - 0.0000001) return(false);
    double frac = half / tLots[i];
    double oLots = tLots[i], oRisk = tRisk[i];
    tLots[i] = half;
@@ -1439,11 +1528,34 @@ void HalfClose()
    if(pl >= 0) nWin++; else nLoss++;
    if(hN < HMAX) { hT[hN] = lastT; hR[hN] = r; hP[hN] = pl; hCat[hN] = tCat[i]; hStp[hN] = tStp[i]; hN++; }
    LogTrade(i, fill, pl, r);
-   lastMsg = StringFormat("Half closed #%d %.2f lots  %+.2fR  (%.1f$)", tId[i], half, r, pl);
+   lastMsg = StringFormat("%s #%d %.2f lots  %+.2fR  (%.1f$)", label, tId[i], half, r, pl);
    tLots[i] = NormalizeDouble(oLots - half, 2);
    tRisk[i] = oRisk - tRisk[i];
    SaveState();
+   return(true);
+}
+void HalfClose()
+{
+   int i = SelIdx();
+   if(i < 0) { lastMsg = "No open trade."; return; }
+   if(!PartialClose(i, MarketFill(i), "Half closed")) lastMsg = "Lot too small to split.";
    ApplySel();
+}
+// fires auto half-closes whose level was touched in this bar
+void CheckHalves(int i, double hi, double lo)
+{
+   bool changed = false;
+   while(tLvK[i] < tLvN[i])
+   {
+      double lp = HalfPrice(i, tLvK[i]);
+      bool hit = (tType[i] == 0) ? (hi >= lp) : (lo + SpreadPrice <= lp);
+      if(!hit) break;
+      string lab = "Auto half @" + DoubleToString(tLv[i][tLvK[i]], 1) + "R";
+      if(!PartialClose(i, lp, lab)) lastMsg = "Auto half skipped: lot too small to split.";
+      tLvK[i]++;
+      changed = true;
+   }
+   if(changed) DrawHalfLines(i);
 }
 void MoveBE()
 {
@@ -1554,12 +1666,20 @@ void CheckTrades(double hi, double lo)
       if(tType[i] == 0)
       {
          if(tSL[i] > 0 && lo <= tSL[i])      CloseTrade(i, tSL[i]);
-         else if(tTP[i] > 0 && hi >= tTP[i]) CloseTrade(i, tTP[i]);
+         else
+         {
+            CheckHalves(i, hi, lo);
+            if(tTP[i] > 0 && hi >= tTP[i]) CloseTrade(i, tTP[i]);
+         }
       }
       else
       {
          if(tSL[i] > 0 && hi + SpreadPrice >= tSL[i])      CloseTrade(i, tSL[i]);
-         else if(tTP[i] > 0 && lo + SpreadPrice <= tTP[i]) CloseTrade(i, tTP[i]);
+         else
+         {
+            CheckHalves(i, hi, lo);
+            if(tTP[i] > 0 && lo + SpreadPrice <= tTP[i]) CloseTrade(i, tTP[i]);
+         }
       }
    }
 }
@@ -2057,7 +2177,7 @@ void OnStart()
    BuildUI();
    if(sRisk != "") ObjectSetString(cid, "RP_risk", OBJPROP_TEXT, sRisk);
    if(sTpr  != "") ObjectSetString(cid, "RP_tpr",  OBJPROP_TEXT, sTpr);
-   if(sStep != "") ObjectSetString(cid, "RP_step", OBJPROP_TEXT, sStep);
+   if(StringSubstr(sStep, 0, 2) == "h:") ObjectSetString(cid, "RP_half", OBJPROP_TEXT, StringSubstr(sStep, 2));
    if(sTrl  != "") ObjectSetString(cid, "RP_trl",  OBJPROP_TEXT, sTrl);
    Refresh();
    lastMsg = "Ready. Drag the yellow line = your stop, then BUY/SELL.";
@@ -2148,6 +2268,7 @@ void OnStart()
       {
          tgTick = 0;
          ApplyToggles();
+         UpdatePreview();
          if(pOn) UpdatePendLabel();
          bool pdNow = (ObjectGetInteger(cid, "RP_pd", OBJPROP_STATE) != 0);
          bool wmNow = (ObjectGetInteger(cid, "RP_wm", OBJPROP_STATE) != 0);
