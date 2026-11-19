@@ -383,7 +383,7 @@ int    rgX[160];
 int    rgCnt = 0;
 int    gTab = 0;          // tab that objects created right now belong to
 int    curTab = 1;
-int    tgPrev[4];
+int    tgPrev[5];
 int Xr(int x, int w) { return PM + PIN + (PW - 2 * PIN) - x; }   // distance: chart right edge -> object LEFT edge
 void Reg(string n)
 {
@@ -412,8 +412,8 @@ void SetTab(int t)
 }
 void ApplyToggles()
 {
-   string tn[4] = {"RP_play", "RP_pd", "RP_wm", "RP_kt"};
-   for(int i = 0; i < 4; i++)
+   string tn[5] = {"RP_play", "RP_pd", "RP_wm", "RP_kt", "RP_rr"};
+   for(int i = 0; i < 5; i++)
    {
       int st = (ObjectGetInteger(cid, tn[i], OBJPROP_STATE) != 0) ? 1 : 0;
       if(st != tgPrev[i]) { tgPrev[i] = st; StyleBtn(tn[i], st == 1); }
@@ -574,6 +574,38 @@ double HalfPrice(int i, int k)
 {
    return(NormalizeDouble((tType[i] == 0) ? tEntry[i] + tLv[i][k] * tDist[i] : tEntry[i] - tLv[i][k] * tDist[i], digitsV));
 }
+// R/R tool: same OBJ_FIBO as the Risk Manager EA (SL, 2X, Entry, R1..R6). Placed from the orange SL line to the current price; drag the points to fine-tune.
+void DrawRR()
+{
+   ObjectDelete(cid, "RP_RR");
+   if(ObjectFind(cid, "RP_SLLINE") < 0) return;
+   double slp = ObjectGetDouble(cid, "RP_SLLINE", OBJPROP_PRICE);
+   double e = (slp < lastBid) ? lastBid + SpreadPrice : lastBid;
+   int ps = PeriodSeconds((ENUM_TIMEFRAMES)ChartPeriod(cid));
+   if(ps <= 0) ps = 300;
+   datetime t2 = lastT;
+   datetime t1 = lastT - 12 * ps;
+   if(!ObjectCreate(cid, "RP_RR", OBJ_FIBO, 0, t1, slp, t2, e)) return;
+   double lv[9]   = {0.0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+   string tx[9]   = {"SL", "2X", "Entry", "R1", "R2", "R3", "R4", "R5", "R6"};
+   color lc = C'40,120,70';
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_LEVELS, 9);
+   for(int i = 0; i < 9; i++)
+   {
+      ObjectSetDouble(cid, "RP_RR", OBJPROP_LEVELVALUE, i, lv[i]);
+      ObjectSetString(cid, "RP_RR", OBJPROP_LEVELTEXT, i, tx[i]);
+      ObjectSetInteger(cid, "RP_RR", OBJPROP_LEVELCOLOR, i, lc);
+      ObjectSetInteger(cid, "RP_RR", OBJPROP_LEVELSTYLE, i, STYLE_SOLID);
+      ObjectSetInteger(cid, "RP_RR", OBJPROP_LEVELWIDTH, i, 2);
+   }
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_COLOR, lc);
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_STYLE, STYLE_DOT);
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_WIDTH, 1);
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_RAY, false);
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_RAY_RIGHT, false);
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_SELECTABLE, true);
+   ObjectSetInteger(cid, "RP_RR", OBJPROP_SELECTED, true);
+}
 void BuildUI()
 {
    rgCnt = 0; gTab = 0;
@@ -634,9 +666,10 @@ void BuildUI()
 
    // tools
    Lbl("RP_c7", "TOOLS", 0, 434, MG_CAP);
-   Btn("RP_pd", "Prev Day", 0,   450, 66, 1);
-   Btn("RP_wm", "Week Map", 70,  450, 67, 1);
-   Btn("RP_kt", "Key Time", 141, 450, 67, 1);
+   Btn("RP_pd", "Prev Day", 0,   450, 49, 1);
+   Btn("RP_wm", "Week Map", 53,  450, 49, 1);
+   Btn("RP_kt", "Key Time", 106, 450, 49, 1);
+   Btn("RP_rr", "R/R",      159, 450, 49, 1);
    Edt("RP_date", TimeToString(startT, TIME_DATE | TIME_MINUTES), 0, 480, 112);
    Btn("RP_cal",  "Cal", 116, 479, 44);
    Btn("RP_go",   "Go",  164, 479, 44);
@@ -2134,6 +2167,7 @@ void OnStart()
    int miss = 0;
    bool statsPrev = false;
    int  tgTick = 0, thTick = 0;
+   bool rrOn = false;
    while(!IsStopped())
    {
       if(ObjectFind(cid, "RP_exit") < 0)
@@ -2217,6 +2251,14 @@ void OnStart()
          bool ktNow = (ObjectGetInteger(cid, "RP_kt", OBJPROP_STATE) != 0);
          if(pdNow != pdOn || wmNow != wmOn) { pdOn = pdNow; wmOn = wmNow; lvForce = true; moved = true; }
          if(ktNow != ktOn) { ktOn = ktNow; KeyTimeSync(); moved = true; }
+         bool rrNow = (ObjectGetInteger(cid, "RP_rr", OBJPROP_STATE) != 0);
+         if(rrNow != rrOn)
+         {
+            rrOn = rrNow;
+            if(rrOn) { DrawRR(); lastMsg = "R/R placed from the orange SL line to price. Drag its points to fine-tune."; }
+            else ObjectDelete(cid, "RP_RR");
+            moved = true;
+         }
          if(++thTick >= 10) { thTick = 0; ThemeOthers(); }
       }
 
