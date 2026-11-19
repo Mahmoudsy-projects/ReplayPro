@@ -574,58 +574,6 @@ double HalfPrice(int i, int k)
 {
    return(NormalizeDouble((tType[i] == 0) ? tEntry[i] + tLv[i][k] * tDist[i] : tEntry[i] - tLv[i][k] * tDist[i], digitsV));
 }
-// dotted lines at the levels not yet fired
-void DrawHalfLines(int i)
-{
-   string k = IntegerToString(tId[i]);
-   for(int q = 0; q < 6; q++)
-   {
-      string n = "RP_H" + k + "_" + IntegerToString(q);
-      ObjectDelete(cid, n);
-      if(q < tLvK[i] || q >= tLvN[i]) continue;
-      DrawLine(n, HalfPrice(i, q), C'90,90,90', STYLE_DOT, false, 1);
-      ObjectSetString(cid, n, OBJPROP_TEXT, "1/2 @ " + DoubleToString(tLv[i][q], 1) + "R");
-   }
-}
-// planning preview: dotted lines at the Half@R levels and TP(R) from the orange SL line (only while no trade is open)
-string pvKey = "";
-void ClearPreview()
-{
-   for(int q = 0; q < 7; q++) ObjectDelete(cid, "RP_PV" + IntegerToString(q));
-   pvKey = "";
-}
-void UpdatePreview()
-{
-   if(tN > 0 || ObjectFind(cid, "RP_SLLINE") < 0) { if(pvKey != "") ClearPreview(); return; }
-   double slp = ObjectGetDouble(cid, "RP_SLLINE", OBJPROP_PRICE);
-   string ht = ObjectGetString(cid, "RP_half", OBJPROP_TEXT);
-   double tpr = ReadEdit("RP_tpr");
-   string key = DoubleToString(slp, digitsV) + "|" + DoubleToString(lastBid, digitsV) + "|" + ht + "|" + DoubleToString(tpr, 2);
-   if(key == pvKey) return;
-   ClearPreview();
-   pvKey = key;
-   int type = (slp < lastBid) ? 0 : 1;
-   double e = (type == 0) ? lastBid + SpreadPrice : lastBid;
-   double dist = MathAbs(e - slp);
-   if(dist <= 0) return;
-   double lv[1][6];
-   int n = ParseLevels(ht, lv, 0);
-   int m = 0;
-   for(int k = 0; k < n; k++)
-   {
-      double pr = NormalizeDouble((type == 0) ? e + lv[0][k] * dist : e - lv[0][k] * dist, digitsV);
-      string nm = "RP_PV" + IntegerToString(m); m++;
-      DrawLine(nm, pr, C'90,90,90', STYLE_DOT, false, 1);
-      ObjectSetString(cid, nm, OBJPROP_TEXT, "preview 1/2 @ " + DoubleToString(lv[0][k], 1) + "R");
-   }
-   if(tpr > 0)
-   {
-      double pr = NormalizeDouble((type == 0) ? e + tpr * dist : e - tpr * dist, digitsV);
-      string nm = "RP_PV" + IntegerToString(m);
-      DrawLine(nm, pr, C'40,120,70', STYLE_DOT, false, 1);
-      ObjectSetString(cid, nm, OBJPROP_TEXT, "preview TP @ " + DoubleToString(tpr, 1) + "R");
-   }
-}
 void BuildUI()
 {
    rgCnt = 0; gTab = 0;
@@ -787,7 +735,6 @@ void DelLines(int id)
    ObjectDelete(cid, "RP_E" + k);
    ObjectDelete(cid, "RP_S" + k);
    ObjectDelete(cid, "RP_T" + k);
-   for(int q = 0; q < 6; q++) ObjectDelete(cid, "RP_H" + k + "_" + IntegerToString(q));
 }
 //--------------------------------------------------------------------
 // Grouping of closed trades by close day (mode 0) or by week starting Monday (mode 1)
@@ -1355,7 +1302,6 @@ bool OpenTradeAt(int type, double e, double slp, string cat, string stp)
    DrawLine("RP_E" + k, e, (type == 0 ? clrDodgerBlue : clrOrangeRed), STYLE_SOLID, false, 1);
    DrawLine("RP_S" + k, sl, clrRed, STYLE_DOT, true, 1);
    if(tp > 0) DrawLine("RP_T" + k, tp, clrLime, STYLE_DOT, true, 1);
-   DrawHalfLines(tN - 1);
    ApplySel();
    lastMsg = StringFormat("Opened #%d %s %.2f lots @ %s | risk %.1f$ | %s", id, (type == 0 ? "BUY" : "SELL"),
                           lots, DoubleToString(e, digitsV), tRisk[tN - 1], TagFull(cat, stp));
@@ -1544,7 +1490,6 @@ void HalfClose()
 // fires auto half-closes whose level was touched in this bar
 void CheckHalves(int i, double hi, double lo)
 {
-   bool changed = false;
    while(tLvK[i] < tLvN[i])
    {
       double lp = HalfPrice(i, tLvK[i]);
@@ -1553,9 +1498,7 @@ void CheckHalves(int i, double hi, double lo)
       string lab = "Auto half @" + DoubleToString(tLv[i][tLvK[i]], 1) + "R";
       if(!PartialClose(i, lp, lab)) lastMsg = "Auto half skipped: lot too small to split.";
       tLvK[i]++;
-      changed = true;
    }
-   if(changed) DrawHalfLines(i);
 }
 void MoveBE()
 {
@@ -2268,7 +2211,6 @@ void OnStart()
       {
          tgTick = 0;
          ApplyToggles();
-         UpdatePreview();
          if(pOn) UpdatePendLabel();
          bool pdNow = (ObjectGetInteger(cid, "RP_pd", OBJPROP_STATE) != 0);
          bool wmNow = (ObjectGetInteger(cid, "RP_wm", OBJPROP_STATE) != 0);
