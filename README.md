@@ -19,9 +19,9 @@ The offline chart is refreshed with `ChartSetSymbolPeriod()` on every open `*_R`
 ## Repository layout
 - `MQL4/Scripts/ReplayPro.mq4` — current script (v4.00)
 - `MQL4/Files/` — files that go to `MQL4\Files`
-- `docs/` — user guide (Persian PDF, written for v3.x), hand-off notes, changelog
+- `docs/` — `ReplayPro_User_Guide_v4.00_NoDLL.pdf` (Persian: 2-page v4.00 no-DLL addendum first, then the v3.x guide), hand-off notes, changelog
 - `archive/` — previous version with DLL imports (v3.75), kept for history
 
-Notes: the guide PDF and hand-off still describe the DLL-based Dashboard button (v3.x). Not compiled in the cloud — every change is tested by the owner in MT4.
+Notes: the hand-off notes (`docs/ReplayPro_Handoff.md`) still describe the DLL-based Dashboard button of v3.x; the guide starts with the v4.00 addendum that supersedes those parts. Not compiled in the cloud — every change is tested by the owner in MT4.
 
 Related project: [RiskManager-EA](https://github.com/Mahmoudsy-projects/RiskManager-EA).
