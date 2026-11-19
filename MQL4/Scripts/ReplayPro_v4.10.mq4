@@ -42,10 +42,10 @@ input string          ChartTemplate = "";                // Optional: name of a 
 input bool            UseLook      = true;               // Apply the chart look below to every replay window
 input bool            ShowGrid     = false;              // Grid on/off
 input bool            UseCandles   = true;               // true = candlesticks, false = bars
-input color           ColBack      = clrBlack;           // Chart background
-input color           ColFore      = clrSilver;          // Axis / text color
-input color           ColBull      = C'38,166,154';      // Up candle color
-input color           ColBear      = C'239,83,80';       // Down candle color
+input color           ColBack      = C'192,192,192';     // Chart background (Hub theme 5)
+input color           ColFore      = C'0,0,0';           // Axis / text color
+input color           ColBull      = C'255,255,255';     // Up candle color
+input color           ColBear      = C'128,128,128';     // Down candle color
 
 #define MAXT 50
 #define NTF  6
@@ -613,7 +613,7 @@ void BuildUI()
    Btn("RP_reset", "Reset",     141, 480, 67, 2);
 
    // draggable planning SL line (structure stop). DOUBLE-click it, then drag.
-   DrawLine("RP_SLLINE", lastBid - InitSLDist, clrYellow, STYLE_SOLID, true, 2);
+   DrawLine("RP_SLLINE", lastBid - InitSLDist, clrDarkOrange, STYLE_SOLID, true, 2);
    ObjectSetInteger(cid, "RP_SLLINE", OBJPROP_SELECTED, true);
    ApplyToggles();
 }
@@ -1921,11 +1921,15 @@ void ApplyLook(long c)
    ChartSetInteger(c, CHART_SHOW_GRID, ShowGrid ? 1 : 0);
    ChartSetInteger(c, CHART_COLOR_BACKGROUND, ColBack);
    ChartSetInteger(c, CHART_COLOR_FOREGROUND, ColFore);
-   ChartSetInteger(c, CHART_COLOR_CHART_UP, ColBull);
-   ChartSetInteger(c, CHART_COLOR_CHART_DOWN, ColBear);
+   ChartSetInteger(c, CHART_COLOR_CHART_UP, C'0,0,0');        // bar / candle outline (Hub theme 5)
+   ChartSetInteger(c, CHART_COLOR_CHART_DOWN, C'0,0,0');
+   ChartSetInteger(c, CHART_COLOR_GRID, C'128,128,128');
+   ChartSetInteger(c, CHART_COLOR_VOLUME, C'105,105,105');
+   ChartSetInteger(c, CHART_COLOR_ASK, C'166,90,62');
+   ChartSetInteger(c, CHART_COLOR_STOP_LEVEL, C'122,59,52');
    ChartSetInteger(c, CHART_COLOR_CANDLE_BULL, ColBull);
    ChartSetInteger(c, CHART_COLOR_CANDLE_BEAR, ColBear);
-   ChartSetInteger(c, CHART_COLOR_CHART_LINE, ColFore);
+   ChartSetInteger(c, CHART_COLOR_CHART_LINE, C'105,105,105');
    ChartRedraw(c);
 }
 // apply the look (and template, if any) to every other offline window you open by hand
