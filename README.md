@@ -5,6 +5,8 @@ It builds an offline chart where future candles do not exist, so you can practis
 
 **Current version: v4.11 — no DLL needed** (keep "Allow DLL imports" OFF).
 
+**Status (2026-11-19): v4.11 was compiled and tested by Mahmoud** (confirmed by the author). It includes the v4.00 (no DLL) and v4.10 (Mono Gray panel) changes.
+
 v4.10/v4.11 highlights: Risk-Manager "Mono Gray" panel, Half Close and draggable **Set Half Close** line (repeatable, any number of steps), R/R tool, multi-step exits counted as ONE trade (R measured against the full entry risk), and a Persian RTL dashboard in the same style as the Risk Manager dashboard. See `docs/CHANGELOG_ReplayPro_v4.11.md`.
 
 ## Install
