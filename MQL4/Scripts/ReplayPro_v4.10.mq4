@@ -383,7 +383,7 @@ int    rgX[160];
 int    rgCnt = 0;
 int    gTab = 0;          // tab that objects created right now belong to
 int    curTab = 1;
-int    tgPrev[5];
+int    tgPrev[10];
 int Xr(int x, int w) { return PM + PIN + (PW - 2 * PIN) - x; }   // distance: chart right edge -> object LEFT edge
 void Reg(string n)
 {
@@ -412,8 +412,8 @@ void SetTab(int t)
 }
 void ApplyToggles()
 {
-   string tn[5] = {"RP_play", "RP_pd", "RP_wm", "RP_kt", "RP_rr"};
-   for(int i = 0; i < 5; i++)
+   string tn[10] = {"RP_play", "RP_pd", "RP_wm", "RP_kt", "RP_rr", "RP_hr1", "RP_hr2", "RP_hr3", "RP_hr4", "RP_hr5"};
+   for(int i = 0; i < 10; i++)
    {
       int st = (ObjectGetInteger(cid, tn[i], OBJPROP_STATE) != 0) ? 1 : 0;
       if(st != tgPrev[i]) { tgPrev[i] = st; StyleBtn(tn[i], st == 1); }
@@ -570,6 +570,15 @@ int ParseLevels(string txt, double &lv[][6], int row)
    if(row >= 0) for(int k = 0; k < n; k++) lv[row][k] = tmp[k];
    return(n);
 }
+// selected Half@R levels from the 1..5 toggle buttons, e.g. "1,3"
+string HalfText()
+{
+   string t = "";
+   for(int q = 1; q <= 5; q++)
+      if(ObjectGetInteger(cid, "RP_hr" + IntegerToString(q), OBJPROP_STATE) != 0)
+         t = t + (t == "" ? "" : ",") + IntegerToString(q);
+   return(t);
+}
 // price of auto half-close level k of trade i
 double HalfPrice(int i, int k)
 {
@@ -656,7 +665,8 @@ void BuildUI()
    Lbl("RP_l2", "TP(R)", 110, 289, MG_CAP);
    Edt("RP_tpr",  DoubleToString(TP_R, 1),        152, 285, 56);
    Lbl("RP_l3", "Half@R", 0, 317, MG_CAP);
-   Edt("RP_half", "1", 50, 313, 158);
+   for(int q = 1; q <= 5; q++)
+      Btn("RP_hr" + IntegerToString(q), IntegerToString(q), 46 + (q - 1) * 33, 313, 30, 1, 22);
    // strategy tag: click to cycle. "Tag" re-tags the selected trade (and the pending line, if any)
    Btn("RP_strat", "", 0,   340, 208);
    Btn("RP_setup", "", 0,   366, 158);
@@ -1029,7 +1039,7 @@ void SaveState()
    {
       a = ObjectGetString(cid, "RP_risk", OBJPROP_TEXT);
       b = ObjectGetString(cid, "RP_tpr",  OBJPROP_TEXT);
-      c = "h:" + ObjectGetString(cid, "RP_half", OBJPROP_TEXT);
+      c = "h:" + HalfText();
       d = ObjectGetString(cid, "RP_trl",  OBJPROP_TEXT);
    }
    FileWrite(f, TimeToString(lastT, TIME_DATE | TIME_MINUTES), IntegerToString(hN), a, b, c, d, TagC(), TagS());
@@ -1327,7 +1337,7 @@ bool OpenTradeAt(int type, double e, double slp, string cat, string stp)
    tSL[tN] = sl; tTP[tN] = tp; tTime[tN] = lastT; tRisk[tN] = lots * dist * ContractSize; tTrail[tN] = 0;
    tCat[tN] = cat; tStp[tN] = stp;
    tDist[tN] = dist;
-   tLvN[tN] = ParseLevels(ObjectGetString(cid, "RP_half", OBJPROP_TEXT), tLv, tN);
+   tLvN[tN] = ParseLevels(HalfText(), tLv, tN);
    tLvK[tN] = 0;
    tN++;
    selId = id;
@@ -2154,7 +2164,12 @@ void OnStart()
    BuildUI();
    if(sRisk != "") ObjectSetString(cid, "RP_risk", OBJPROP_TEXT, sRisk);
    if(sTpr  != "") ObjectSetString(cid, "RP_tpr",  OBJPROP_TEXT, sTpr);
-   if(StringSubstr(sStep, 0, 2) == "h:") ObjectSetString(cid, "RP_half", OBJPROP_TEXT, StringSubstr(sStep, 2));
+   if(StringSubstr(sStep, 0, 2) == "h:")
+   {
+      string hs = "," + StringSubstr(sStep, 2) + ",";
+      for(int q = 1; q <= 5; q++)
+         ObjectSetInteger(cid, "RP_hr" + IntegerToString(q), OBJPROP_STATE, StringFind(hs, "," + IntegerToString(q) + ",") >= 0);
+   }
    if(sTrl  != "") ObjectSetString(cid, "RP_trl",  OBJPROP_TEXT, sTrl);
    Refresh();
    lastMsg = "Ready. Drag the yellow line = your stop, then BUY/SELL.";
